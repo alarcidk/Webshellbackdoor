@@ -119,6 +119,10 @@ if (isset($_POST['rename']) && isset($_POST['newName'])) {
 $dir = isset($_GET['dir']) ? $_GET['dir'] : '.';
 $displayDir = realpath($dir);
 
+if ($displayDir === false) {
+    die('Invalid directory.');
+}
+
 $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($val) { return $val !== ''; });
 ?>
 
@@ -145,9 +149,9 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <div class="mb-4">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="?dir=">/</a></li>
+                        <li class="breadcrumb-item"><a href="?dir=/"><?php echo htmlspecialchars('/'); ?></a></li>
                         <?php foreach ($dirArray as $key => $dirPart): ?>
-                            <?php $path = implode(DIRECTORY_SEPARATOR, array_slice($dirArray, 0, $key + 1)); ?>
+                            <?php $path = '/' . implode(DIRECTORY_SEPARATOR, array_slice($dirArray, 0, $key + 1)); ?>
                             <li class="breadcrumb-item">
                                 <a href="?dir=<?php echo urlencode($path); ?>"><?php echo htmlspecialchars($dirPart); ?></a>
                             </li>
