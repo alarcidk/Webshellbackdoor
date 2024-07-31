@@ -7,7 +7,7 @@ if (isset($_POST['password'])) {
     if ($_POST['password'] === PASSWORD) {
         $_SESSION['authenticated'] = true;
     } else {
-        echo "<div class='alert alert-danger'>Incorrect password.</div>";
+        echo "<div class='alert alert-danger text-center'>Incorrect password.</div>";
     }
 }
 
@@ -24,13 +24,17 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
         <div class="text-center mb-4">
             <img src="https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg" alt="Banner Image" class="img-fluid">
         </div>
-        <form method="post" class="text-center">
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="post" class="text-center">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
+        </div>
     </div>';
     exit;
 }
@@ -64,29 +68,25 @@ function display_path_links($dir) {
             $folderPath = htmlspecialchars($dir . '/' . $folder);
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<a href='?dir=" . urlencode($folderPath) . "' class='btn btn-link'>$folder/</a>";
-            echo "<form method='post' class='d-inline' style='display:none;' id='delete-form-$folder'>";
+            echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $folder) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
             echo "</form>";
-            echo "<button class='btn btn-danger btn-sm' onclick='document.getElementById(\"delete-form-$folder\").style.display=\"inline\";'>Delete</button>";
             echo "</div>";
         }
 
         foreach ($files as $file) {
-            $filePath = htmlspecialchars($dir . '/' . $file);
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<span>$file</span>";
-            echo "<form method='post' class='d-inline' style='display:none;' id='rename-form-$file'>";
+            echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='source' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<input type='text' name='destination' class='form-control form-control-sm' placeholder='New name' required>";
+            echo "<input type='text' name='destination' class='form-control-sm' placeholder='New name'>";
             echo "<button type='submit' name='rename' class='btn btn-warning btn-sm ml-2'>Rename</button>";
             echo "</form>";
-            echo "<button class='btn btn-warning btn-sm' onclick='document.getElementById(\"rename-form-$file\").style.display=\"inline\";'>Rename</button>";
-            echo "<form method='post' class='d-inline' style='display:none;' id='delete-form-file-$file'>";
+            echo "<form method='post' style='display:inline;'>";
             echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm'>Delete</button>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
             echo "</form>";
-            echo "<button class='btn btn-danger btn-sm' onclick='document.getElementById(\"delete-form-file-$file\").style.display=\"inline\";'>Delete</button>";
             echo "</div>";
         }
     } else {
@@ -198,17 +198,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        // Toggle visibility of the Rename form
-        document.querySelectorAll('.btn-warning').forEach(button => {
-            button.addEventListener('click', function() {
-                const formId = this.getAttribute('data-form-id');
-                const form = document.getElementById(formId);
-                form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
-            });
-        });
-    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
