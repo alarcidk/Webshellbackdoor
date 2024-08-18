@@ -101,14 +101,14 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($folderPath));
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item' $style>";
-            echo "<span class='folder-item'>$folder/</span><span class='separator'>|</span>";
-            echo "<span class='folder-permissions'>" . get_permissions($folderPath) . "</span><span class='separator'>|</span>";
-            echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
-            echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
-            echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
-            echo "<button class='btn btn-info btn-sm' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
-            echo "<button class='btn btn-danger btn-sm' onclick=\"showForm('delete-$folder')\">Hapus</button>";
+            echo "<div class='list-group-item d-flex align-items-center' $style>";
+            echo "<span class='folder-item flex-grow-1'>$folder/</span>";
+            echo "<span class='folder-permissions text-center'>" . get_permissions($folderPath) . "</span>";
+            echo "<span class='folder-date text-center'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$folder')\">Hapus</button>";
             echo "</div>";
 
             // Form Rename
@@ -173,16 +173,16 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($filePath));
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item' $style>";
-            echo "<span class='folder-item'>$file</span><span class='separator'>|</span>";
-            echo "<span class='folder-permissions'>" . get_permissions($filePath) . "</span><span class='separator'>|</span>";
-            echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
-            echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
-            echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
-            echo "<button class='btn btn-info btn-sm' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
-            echo "<button class='btn btn-primary btn-sm' onclick=\"showForm('edit-$file')\">Edit</button>";
-            echo "<button class='btn btn-danger btn-sm' onclick=\"showForm('delete-$file')\">Hapus</button>";
-            echo "<a href='?download=$encodedPath' class='btn btn-info btn-sm'>Download</a>";
+            echo "<div class='list-group-item d-flex align-items-center' $style>";
+            echo "<span class='folder-item flex-grow-1'>$file</span>";
+            echo "<span class='folder-permissions text-center'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='folder-date text-center'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-primary btn-sm ml-2' onclick=\"showForm('edit-$file')\">Edit</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$file')\">Hapus</button>";
+            echo "<a href='?download=$encodedPath' class='btn btn-info btn-sm ml-2'>Download</a>";
             echo "</div>";
 
             // Form Rename
@@ -521,11 +521,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             text-align: center;
         }
         
-        .separator {
-            margin: 0 10px;
-            color: #888;
-        }
-
         .info-sites, .network-info {
             display: none;
             margin-top: 20px;
