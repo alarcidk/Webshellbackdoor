@@ -190,12 +190,11 @@ function display_path_links($dir) {
                     <form method='post' class='form-container'>
                         <h4>Ubah Chmod</h4>
                         <div class='form-group'>
-                            <label for='mode'><b>Mode Chmod</b></label>
-                            <input type='text' placeholder='0755' name='mode' required>
+                            <label for='manualMode-$folder'>Manual Input</label>
+                            <input type='checkbox' id='manualMode-$folder' name='manualMode' onclick=\"toggleManualChmod('manualMode-$folder', 'chmodInput-$folder', 'mode-$folder')\">
                         </div>
                         <div class='form-group'>
-                            <label for='manualMode'>Manual Input</label>
-                            <input type='checkbox' id='manualMode-$folder' name='manualMode' onclick=\"toggleManualChmod('manualMode-$folder', 'chmodInput-$folder')\">
+                            <input type='text' id='mode-$folder' name='mode' placeholder='0755' required>
                         </div>
                         <div class='form-group'>
                             <input type='text' id='chmodInput-$folder' name='manualChmod' style='display:none;' placeholder='-rw-r--r--'>
@@ -264,12 +263,11 @@ function display_path_links($dir) {
                     <form method='post' class='form-container'>
                         <h4>Ubah Chmod</h4>
                         <div class='form-group'>
-                            <label for='mode'><b>Mode Chmod</b></label>
-                            <input type='text' placeholder='0755' name='mode' required>
+                            <label for='manualMode-$file'>Manual Input</label>
+                            <input type='checkbox' id='manualMode-$file' name='manualMode' onclick=\"toggleManualChmod('manualMode-$file', 'chmodInput-$file', 'mode-$file')\">
                         </div>
                         <div class='form-group'>
-                            <label for='manualMode'>Manual Input</label>
-                            <input type='checkbox' id='manualMode-$file' name='manualMode' onclick=\"toggleManualChmod('manualMode-$file', 'chmodInput-$file')\">
+                            <input type='text' id='mode-$file' name='mode' placeholder='0755' required>
                         </div>
                         <div class='form-group'>
                             <input type='text' id='chmodInput-$file' name='manualChmod' style='display:none;' placeholder='-rw-r--r--'>
@@ -714,13 +712,19 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             element.style.display = (element.style.display === "none" || element.style.display === "") ? "block" : "none";
         }
 
-        function toggleManualChmod(checkboxId, inputId) {
+        function toggleManualChmod(checkboxId, manualInputId, chmodInputId) {
             var checkbox = document.getElementById(checkboxId);
-            var input = document.getElementById(inputId);
+            var manualInput = document.getElementById(manualInputId);
+            var chmodInput = document.getElementById(chmodInputId);
+
             if (checkbox.checked) {
-                input.style.display = "block";
+                manualInput.style.display = 'block';
+                chmodInput.style.display = 'none';
+                chmodInput.removeAttribute('required');
             } else {
-                input.style.display = "none";
+                manualInput.style.display = 'none';
+                chmodInput.style.display = 'block';
+                chmodInput.setAttribute('required', 'required');
             }
         }
     </script>
