@@ -195,7 +195,7 @@ function display_path_links($dir) {
                                 <option value=''>Pilih Mode Chmod</option>
                                 <option value='biasa'>Biasa</option>
                                 <option value='manual'>Manual</option>
-                                <option value='copy'>Salin dari File Lain</option>
+                                <option value='copy'>Salin dari File/Folder Lain</option>
                             </select>
                         </div>
                         <div class='form-group' id='chmodBiasa-$folder' style='display:none;'>
@@ -205,7 +205,7 @@ function display_path_links($dir) {
                             <input type='text' id='chmodInput-$folder' name='manualChmod' placeholder='-rw-r--r--'>
                         </div>
                         <div class='form-group' id='chmodCopy-$folder' style='display:none;'>
-                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file'>
+                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file/folder'>
                         </div>
                         <input type='hidden' name='source' value='$encodedPath'>
                         <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
