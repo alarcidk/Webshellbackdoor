@@ -159,7 +159,7 @@ function display_path_links($dir) {
         }
 
         foreach ($folders as $folder) {
-            $folderPath = $dir . '/' . $folder;
+            $folderPath = realpath($dir . '/' . $folder);
             $encodedPath = urlencode(base64_encode($folderPath));
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
@@ -239,7 +239,7 @@ function display_path_links($dir) {
         }
 
         foreach ($files as $file) {
-            $filePath = $dir . '/' . $file;
+            $filePath = realpath($dir . '/' . $file);
             $encodedPath = urlencode(base64_encode($filePath));
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
