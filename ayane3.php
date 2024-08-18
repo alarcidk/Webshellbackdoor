@@ -633,7 +633,31 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <button class="btn btn-primary" onclick="toggleInfoSites()">Informasi Web</button>
             <button class="btn btn-secondary" onclick="toggleNetworkInfo()">Network Info</button>
             <button class="btn btn-info" onclick="showForm('adminer-upload')">Upload Adminer</button>
-            <button class="btn btn-warning" onclick="toggleTheme()">Tampilan</button>
+            <button class="btn btn-warning" onclick="showForm('theme-popup')">Tampilan</button>
+        </div>
+
+        <!-- Form Pilihan Tema -->
+        <div id="theme-popup" class="form-popup">
+            <form class="form-container">
+                <h4>Pilih Tampilan</h4>
+                <div class="form-group">
+                    <input type="radio" id="theme-normal" name="theme" value="normal" onclick="changeTheme('')" checked>
+                    <label for="theme-normal">Normal</label><br>
+                    
+                    <input type="radio" id="theme-dark" name="theme" value="dark" onclick="changeTheme('theme-dark')">
+                    <label for="theme-dark">Mode Gelap</label><br>
+                    
+                    <input type="radio" id="theme-uv" name="theme" value="uv" onclick="changeTheme('theme-uv')">
+                    <label for="theme-uv">Anti Sakit Mata</label><br>
+                    
+                    <input type="radio" id="theme-rgb" name="theme" value="rgb" onclick="changeTheme('theme-rgb')">
+                    <label for="theme-rgb">Mode RGB</label><br>
+                    
+                    <input type="radio" id="theme-elegant" name="theme" value="elegant" onclick="changeTheme('theme-elegant')">
+                    <label for="theme-elegant">Elegan</label><br>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="hideForm('theme-popup')">Tutup</button>
+            </form>
         </div>
 
         <!-- Form Upload Adminer -->
@@ -748,31 +772,8 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             }
         }
 
-        function toggleTheme() {
-            var body = document.getElementById('body');
-            var currentTheme = body.className;
-            var newTheme = '';
-            switch (currentTheme) {
-                case '':
-                    newTheme = 'theme-dark';
-                    break;
-                case 'theme-dark':
-                    newTheme = 'theme-uv';
-                    break;
-                case 'theme-uv':
-                    newTheme = 'theme-rgb';
-                    break;
-                case 'theme-rgb':
-                    newTheme = 'theme-elegant';
-                    break;
-                case 'theme-elegant':
-                    newTheme = '';
-                    break;
-                default:
-                    newTheme = '';
-                    break;
-            }
-            body.className = newTheme;
+        function changeTheme(theme) {
+            document.getElementById('body').className = theme;
         }
     </script>
 </body>
