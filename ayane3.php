@@ -102,8 +102,8 @@ function display_path_links($dir) {
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item' $style>";
-            echo "<span class='folder-item'>$folder/</span>";
-            echo "<span class='folder-permissions'>" . get_permissions($folderPath) . "</span>";
+            echo "<span class='folder-item'>$folder/</span><span class='separator'>|</span>";
+            echo "<span class='folder-permissions'>" . get_permissions($folderPath) . "</span><span class='separator'>|</span>";
             echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
@@ -174,8 +174,8 @@ function display_path_links($dir) {
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item' $style>";
-            echo "<span class='folder-item'>$file</span>";
-            echo "<span class='folder-permissions'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='folder-item'>$file</span><span class='separator'>|</span>";
+            echo "<span class='folder-permissions'>" . get_permissions($filePath) . "</span><span class='separator'>|</span>";
             echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
@@ -521,6 +521,11 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             text-align: center;
         }
         
+        .separator {
+            margin: 0 10px;
+            color: #888;
+        }
+
         .info-sites, .network-info {
             display: none;
             margin-top: 20px;
