@@ -157,9 +157,9 @@ function display_path_links($dir) {
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
             echo "<a href='?dir=$encodedPath' class='btn btn-link'>$folder/</a>";
-            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-auto'>|</span>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
-            echo "<span class='ml-auto'> | </span>";
+            echo "<span class='ml-auto'>|</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
