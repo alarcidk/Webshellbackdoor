@@ -26,14 +26,12 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     echo '
     <style>
         body {
-            background-color: pink;
+            background: linear-gradient(135deg, pink 50%, #ffcccb 50%);
             height: 100vh;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url("https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg");
-            background-size: cover;
         }
         .login-card {
             border-radius: 10px;
@@ -135,6 +133,14 @@ function uploadFromForm($file, $saveTo) {
     }
 }
 
+// Fungsi untuk memecah nama file panjang menjadi beberapa baris
+function format_filename($filename) {
+    if (strlen($filename) > 15) {
+        return wordwrap($filename, 15, "<br>");
+    }
+    return $filename;
+}
+
 // Fungsi untuk menampilkan direktori dan file
 function display_path_links($dir) {
     if (is_dir($dir)) {
@@ -158,7 +164,7 @@ function display_path_links($dir) {
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link word-break'>" . wordwrap($folder, 15, '<br>', true) . "/</a>";
+            echo "<span>" . format_filename($folder) . "/</span>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
@@ -230,7 +236,7 @@ function display_path_links($dir) {
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span class='word-break'>" . wordwrap($file, 15, '<br>', true) . "</span>";
+            echo "<span>" . format_filename($file) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
@@ -526,10 +532,8 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
+            background: linear-gradient(135deg, pink 50%, #ffcccb 50%);
             min-width: 1024px;
-            background-color: pink;
-            background-image: url('https://i.pinimg.com/564x/79/85/d8/7985d80888988a81764ef03feeaafdfb.jpg');
-            background-size: cover;
         }
 
         .form-popup {
@@ -589,10 +593,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         .network-info {
             background-color: #e2e3e5;
-        }
-
-        .word-break {
-            word-break: break-word;
         }
     </style>
 </head>
