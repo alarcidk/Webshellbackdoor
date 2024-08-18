@@ -540,6 +540,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             width: 400px;
             padding: 20px;
             box-shadow: 0px 0px 10px 0px #000;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .form-container h4 {
@@ -552,6 +553,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             margin: 5px 0 10px 0;
             border: none;
             background: #f1f1f1;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .form-container .btn {
@@ -562,6 +564,7 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
             width: 100%;
             margin-bottom:10px;
             opacity: 0.8;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .form-container .btn.cancel {
@@ -586,9 +589,74 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
         .network-info {
             background-color: #e2e3e5;
         }
+
+        /* Animasi background RGB */
+        @keyframes rgbBackground {
+            0% { background-color: red; }
+            25% { background-color: blue; }
+            50% { background-color: green; }
+            75% { background-color: purple; }
+            100% { background-color: red; }
+        }
+
+        /* Warna gelap */
+        .dark-mode {
+            background-color: #333;
+            color: white;
+        }
+
+        .dark-mode .form-popup,
+        .dark-mode .form-container,
+        .dark-mode .form-container input,
+        .dark-mode .form-container textarea {
+            background-color: #444;
+            color: white;
+        }
+
+        /* Warna Anti Sakit Mata */
+        .eye-comfort {
+            background-color: #f0e68c;
+            color: #2e2e2e;
+        }
+
+        .eye-comfort .form-popup,
+        .eye-comfort .form-container,
+        .eye-comfort .form-container input,
+        .eye-comfort .form-container textarea {
+            background-color: #fafad2;
+            color: #2e2e2e;
+        }
+
+        /* Warna RGB */
+        .rgb-mode {
+            animation: rgbBackground 5s infinite;
+            color: white;
+        }
+
+        .rgb-mode .form-popup,
+        .rgb-mode .form-container,
+        .rgb-mode .form-container input,
+        .rgb-mode .form-container textarea {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Warna Elegan */
+        .elegant-mode {
+            background-color: #2f4f4f;
+            color: #daa520;
+        }
+
+        .elegant-mode .form-popup,
+        .elegant-mode .form-container,
+        .elegant-mode .form-container input,
+        .elegant-mode .form-container textarea {
+            background-color: #556b2f;
+            color: #daa520;
+        }
     </style>
 </head>
-<body id="body" style="background-color: pink;">
+<body id="body" class="pink-mode">
     <div class="container mt-5">
         <?php if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']): ?>
         <h1 class="mb-4 text-center">Bypass Shell Ayane Chan Arc</h1>
@@ -721,21 +789,18 @@ $dirArray = array_filter(explode(DIRECTORY_SEPARATOR, $displayDir), function($va
 
         function setDisplayMode(mode) {
             var body = document.getElementById('body');
+            body.className = ''; // Reset classes
             if (mode === 'normal') {
                 body.style.backgroundColor = 'pink';
                 body.style.color = 'black';
             } else if (mode === 'dark') {
-                body.style.backgroundColor = '#333';
-                body.style.color = 'white';
+                body.classList.add('dark-mode');
             } else if (mode === 'eye-comfort') {
-                body.style.backgroundColor = '#f0e68c';
-                body.style.color = '#2e2e2e';
+                body.classList.add('eye-comfort');
             } else if (mode === 'rgb') {
-                body.style.backgroundColor = 'linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(0,255,4,1) 50%, rgba(0,0,255,1) 100%)';
-                body.style.color = 'white';
+                body.classList.add('rgb-mode');
             } else if (mode === 'elegant') {
-                body.style.backgroundColor = '#2f4f4f';
-                body.style.color = '#daa520';
+                body.classList.add('elegant-mode');
             }
             hideForm('display-mode');
         }
